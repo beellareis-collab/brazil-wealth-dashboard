@@ -353,6 +353,7 @@ export default function App() {
 
   const { custodia, novosClientes, pipeline, onboardingConsolidado, onboardingClientes, kyc, cobrancas, aportesSemana, aportesSemanaDetalhe } = data
   const ticket = custodia.total / custodia.total_clientes
+  const pipeTotal = pipeline.reduce((s, e) => s + e.quantidade, 0)
   const novosNaSemana = (aportesSemanaDetalhe || []).filter(a => a.tipo === 'novo_cliente').length
   const period = new Date().toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })
 
