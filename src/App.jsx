@@ -208,55 +208,6 @@ function TVKpi({ label, value, delta, sub, gold }) {
   )
 }
 
-function TVAportes({ resumo }) {
-  if (!resumo) return (
-    <div className="tv-card">
-      <div className="tv-card-label">Aportes da semana</div>
-      <div className="tv-card-hero tv-muted">—</div>
-      <div className="tv-card-sub">aguardando dados</div>
-    </div>
-  )
-  const { semana_total, semana_ativos, semana_novos, anterior_total, variacao_pct } = resumo
-  const max = Math.max(semana_total, anterior_total, 1)
-  const up = variacao_pct >= 0
-  return (
-    <div className="tv-card">
-      <div className="tv-card-label">Aportes da semana</div>
-      <div className="tv-card-hero">{formatCurrency(semana_total, true)}</div>
-      <div className={`tv-delta ${up ? 'tv-delta-up' : 'tv-delta-down'}`}>
-        {up ? '↑' : '↓'} {Math.abs(variacao_pct).toFixed(1)}% vs semana anterior
-      </div>
-      <div className="tv-bars">
-        <div className="tv-bar-row">
-          <span className="tv-bar-lbl tv-gold-txt">Esta semana</span>
-          <div className="tv-bar-track">
-            <div className="tv-bar-fill" style={{ width: `${(semana_total / max) * 100}%`, background: 'var(--bw-gold)' }} />
-          </div>
-          <span className="tv-bar-val">{formatCurrency(semana_total, true)}</span>
-        </div>
-        <div className="tv-bar-row">
-          <span className="tv-bar-lbl">Semana anterior</span>
-          <div className="tv-bar-track">
-            <div className="tv-bar-fill" style={{ width: `${(anterior_total / max) * 100}%`, background: '#444440' }} />
-          </div>
-          <span className="tv-bar-val tv-muted">{formatCurrency(anterior_total, true)}</span>
-        </div>
-      </div>
-      <div className="tv-split">
-        <div style={{ flex: 1 }}>
-          <div className="tv-split-lbl">Clientes ativos</div>
-          <div className="tv-split-val">{formatCurrency(semana_ativos, true)}</div>
-        </div>
-        <div className="tv-split-sep" />
-        <div style={{ flex: 1, textAlign: 'right' }}>
-          <div className="tv-split-lbl">Novos clientes</div>
-          <div className="tv-split-val">{formatCurrency(semana_novos, true)}</div>
-        </div>
-      </div>
-    </div>
-  )
-}
-
 function TVPipeline({ etapas }) {
   const maxQtd = Math.max(...etapas.map(e => e.quantidade), 1)
   const totalLeads = etapas.reduce((s, e) => s + e.quantidade, 0)
@@ -392,7 +343,6 @@ export default function App() {
         </div>
 
         <div className="tv-middle">
-          <TVAportes resumo={aportesSemana} />
           <TVPipeline etapas={pipeline} />
           <TVOnboarding consolidado={onboardingConsolidado} />
         </div>
