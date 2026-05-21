@@ -209,7 +209,13 @@ function TVKpi({ label, value, delta, sub, gold }) {
 }
 
 function TVAportes({ resumo }) {
-  if (!resumo) return null
+  if (!resumo) return (
+    <div className="tv-card">
+      <div className="tv-card-label">Aportes da semana</div>
+      <div className="tv-card-hero tv-muted">—</div>
+      <div className="tv-card-sub">aguardando dados</div>
+    </div>
+  )
   const { semana_total, semana_ativos, semana_novos, anterior_total, variacao_pct } = resumo
   const max = Math.max(semana_total, anterior_total, 1)
   const up = variacao_pct >= 0
@@ -282,7 +288,13 @@ function TVPipeline({ etapas }) {
 }
 
 function TVOnboarding({ consolidado }) {
-  if (!consolidado) return null
+  if (!consolidado) return (
+    <div className="tv-card">
+      <div className="tv-card-label">Onboarding</div>
+      <div className="tv-card-hero tv-muted">—</div>
+      <div className="tv-card-sub">aguardando dados</div>
+    </div>
+  )
   const total = consolidado.total
   const overallDone = ONBOARDING_STEPS.reduce((s, step) => s + consolidado[step.key], 0)
   const overallTotal = ONBOARDING_STEPS.length * total
