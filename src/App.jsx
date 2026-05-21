@@ -251,31 +251,31 @@ function TVAportes({ resumo }) {
   )
 }
 
-function TVPipeline({ etapas }) {
-  const maxQtd = Math.max(...etapas.map(e => e.quantidade), 1)
-  const totalLeads = etapas.reduce((s, e) => s + e.quantidade, 0)
-  const totalVol = etapas.reduce((s, e) => s + (e.volume_estimado || 0), 0)
+function TVReceitaNova({ resumo, detalhe }) {
+  if (!resumo) return null
+  const { semana_novos, anterior_novos } = resumo
+  const novos = (detalhe || []).filter(a => a.tipo === 'novo_cliente')
+  const varNovos = anterior_novos > 0
+    ? ((semana_novos - anterior_novos) / anterior_novos * 100)
+    : null
+  const up = varNovos !== null && varNovos >= 0
   return (
     <div className="tv-card">
-      <div className="tv-card-label">Pipeline de leads</div>
-      <div className="tv-card-hero">{totalLeads} <span className="tv-hero-unit">leads</span></div>
-      <div className="tv-card-sub">{formatCurrency(totalVol, true)} estimado</div>
+      <div className="tv-card-label">Receita nova na semana</div>
+      <div className="tv-card-hero">{formatCurrency(semana_novos, true)}</div>
+      {varNovos !== null
+        ? <div className={`tv-delta ${up ? 'tv-delta-up' : 'tv-delta-down'}`}>{up ? '↑' : '↓'} {Math.abs(varNovos).toFixed(1)}% vs semana anterior</div>
+        : <div className="tv-card-sub">vs semana anterior sem dados</div>
+      }
+      <div className="tv-card-sub">{novos.length} novo{novos.length !== 1 ? 's' : ''} cliente{novos.length !== 1 ? 's' : ''} na semana</div>
       <div className="tv-list">
-        {etapas.map(e => {
-          const color = ETAPA_COLORS[e.etapa] || '#888'
-          const label = ETAPA_LABELS[e.etapa] || e.etapa
-          const pct = (e.quantidade / maxQtd) * 100
-          return (
-            <div key={e.etapa} className="tv-list-row">
-              <div className="tv-dot" style={{ background: color }} />
-              <div className="tv-list-name">{label}</div>
-              <div className="tv-list-bar-wrap">
-                <div className="tv-list-bar" style={{ width: `${pct}%`, background: color }} />
-              </div>
-              <div className="tv-list-count">{e.quantidade}</div>
-            </div>
-          )
-        })}
+        {novos.map(a => (
+          <div key={a.id} className="tv-list-row">
+            <div className="tv-dot" style={{ background: 'var(--bw-gold)' }} />
+            <div className="tv-list-name">{a.cliente_nome}</div>
+            <div className="tv-list-count" style={{ color: 'var(--bw-gold-light)' }}>{formatCurrency(a.valor, true)}</div>
+          </div>
+        ))}
       </div>
     </div>
   )
@@ -353,7 +353,7 @@ export default function App() {
 
   const { custodia, novosClientes, pipeline, onboardingConsolidado, onboardingClientes, kyc, cobrancas, aportesSemana, aportesSemanaDetalhe } = data
   const ticket = custodia.total / custodia.total_clientes
-  const pipeTotal = pipeline.reduce((s, e) => s + e.quantidade, 0)
+  const novosNaSemana = (aportesSemanaDetalhe || []).filter(a => a.tipo === 'novo_cliente').length
   const period = new Date().toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })
 
   if (view === 'tv') {
@@ -369,15 +369,15 @@ export default function App() {
         </div>
 
         <div className="tv-kpis">
-          <TVKpi label="Custódia total" value={formatCurrency(custodia.total, true)} delta="+8,2% no mês" gold />
-          <TVKpi label="Clientes ativos" value={custodia.total_clientes} sub="+6 este mês" />
+          <TVKpi label="Custódia total" value={formatCurrency(custodia.total, true)} delta="+8,2% na semana" gold />
+          <TVKpi label="Clientes ativos" value={custodia.total_clientes} sub={`+${novosNaSemana} esta semana`} />
           <TVKpi label="Ticket médio" value={formatCurrency(ticket, true)} sub="por cliente" />
-          <TVKpi label="No pipeline" value={pipeTotal} sub="leads ativos" />
+          <TVKpi label="Novos clientes" value={novosNaSemana} sub="na semana" />
         </div>
 
         <div className="tv-middle">
           <TVAportes resumo={aportesSemana} />
-          <TVPipeline etapas={pipeline} />
+          <TVReceitaNova resumo={aportesSemana} detalhe={aportesSemanaDetalhe} />
           <TVOnboarding consolidado={onboardingConsolidado} />
         </div>
 

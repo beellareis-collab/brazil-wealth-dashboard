@@ -312,14 +312,15 @@ body {
 .tv-split-val { font-size: 17px; font-weight: 500; color: var(--bw-gold-light); }
 .tv-split-sep { width: 0.5px; background: var(--bw-border); align-self: stretch; margin: 0 14px; }
 
-/* List rows (Pipeline & Onboarding) */
+/* List rows (Receita nova & Onboarding) */
 .tv-list {
   display: flex; flex-direction: column;
-  flex: 1; justify-content: space-evenly; min-height: 0;
+  flex: 1; min-height: 0;
 }
 .tv-list-row {
+  flex: 1; min-height: 0;
   display: flex; align-items: center; gap: 9px;
-  padding: 5px 0; border-bottom: 0.5px solid var(--bw-border);
+  border-bottom: 0.5px solid var(--bw-border);
 }
 .tv-list-row:last-child { border-bottom: none; }
 .tv-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
