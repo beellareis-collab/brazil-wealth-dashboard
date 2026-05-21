@@ -355,6 +355,9 @@ export default function App() {
   const ticket = custodia.total / custodia.total_clientes
   const pipeTotal = pipeline.reduce((s, e) => s + e.quantidade, 0)
   const novosNaSemana = (aportesSemanaDetalhe || []).filter(a => a.tipo === 'novo_cliente').length
+  const receitaNovaVar = aportesSemana?.anterior_novos > 0
+    ? Math.abs((aportesSemana.semana_novos - aportesSemana.anterior_novos) / aportesSemana.anterior_novos * 100).toFixed(1) + '% vs ant.'
+    : null
   const period = new Date().toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })
 
   if (view === 'tv') {
@@ -373,7 +376,7 @@ export default function App() {
           <TVKpi label="Custódia total" value={formatCurrency(custodia.total, true)} delta="+8,2% na semana" gold />
           <TVKpi label="Clientes ativos" value={custodia.total_clientes} sub={`+${novosNaSemana} esta semana`} />
           <TVKpi label="Ticket médio" value={formatCurrency(ticket, true)} sub="por cliente" />
-          <TVKpi label="Novos clientes" value={novosNaSemana} sub="na semana" />
+          <TVKpi label="Receita nova" value={formatCurrency(aportesSemana?.semana_novos, true)} delta={receitaNovaVar} sub={receitaNovaVar ? null : 'na semana'} />
         </div>
 
         <div className="tv-middle">
