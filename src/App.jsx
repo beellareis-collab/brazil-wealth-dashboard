@@ -87,7 +87,6 @@ function OnboardingSection({ consolidado, clientes }) {
   const [selectedIdx, setSelectedIdx] = useState(0)
 
   const selected = clientes[selectedIdx] || {}
-  const donePct = (key) => consolidado ? Math.round((consolidado[key] / consolidado.total) * 100) : 0
   const clientDone = ONBOARDING_STEPS.filter(s => selected[s.key]).length
   const clientPending = ONBOARDING_STEPS.length - clientDone
 
