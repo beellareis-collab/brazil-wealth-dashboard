@@ -4,11 +4,22 @@ import { formatCurrency, formatDate, initials, ETAPA_LABELS, ETAPA_COLORS, ONBOA
 import AportesSemana from './components/AportesSemana'
 import './App.css'
 
-// ── Sub-components ─────────────────────────────────────────
+// ── Shared ──────────────────────────────────────────────────
 
 function SectionLabel({ children }) {
   return <div className="section-label"><span>{children}</span></div>
 }
+
+function ViewTabs({ view, setView }) {
+  return (
+    <div className="view-tabs">
+      <button className={`view-tab${view === 'tv' ? ' vt-active' : ''}`} onClick={() => setView('tv')}>TV</button>
+      <button className={`view-tab${view === 'detail' ? ' vt-active' : ''}`} onClick={() => setView('detail')}>Detalhes</button>
+    </div>
+  )
+}
+
+// ── Detail components ────────────────────────────────────────
 
 function MetricCard({ label, value, sub, delta, gold }) {
   return (
@@ -45,7 +56,6 @@ function NovosClientes({ clientes }) {
 function Pipeline({ etapas }) {
   const maxQtd = Math.max(...etapas.map(e => e.quantidade), 1)
   const totalVolume = etapas.reduce((s, e) => s + (e.volume_estimado || 0), 0)
-
   return (
     <div className="card">
       <div className="card-title">
@@ -85,18 +95,15 @@ function Pipeline({ etapas }) {
 function OnboardingSection({ consolidado, clientes }) {
   const [tab, setTab] = useState('geral')
   const [selectedIdx, setSelectedIdx] = useState(0)
-
   const selected = clientes[selectedIdx] || {}
   const clientDone = ONBOARDING_STEPS.filter(s => selected[s.key]).length
   const clientPending = ONBOARDING_STEPS.length - clientDone
-
   return (
     <div className="card">
       <div className="tab-bar">
         <button className={`tab${tab === 'geral' ? ' active' : ''}`} onClick={() => setTab('geral')}>Visão geral</button>
         <button className={`tab${tab === 'cliente' ? ' active' : ''}`} onClick={() => setTab('cliente')}>Por cliente</button>
       </div>
-
       {tab === 'geral' && consolidado && (
         <>
           <div className="card-title" style={{ marginBottom: 10 }}>
@@ -125,7 +132,6 @@ function OnboardingSection({ consolidado, clientes }) {
           })}
         </>
       )}
-
       {tab === 'cliente' && (
         <>
           <div className="client-selector">
@@ -189,10 +195,153 @@ function Controles({ kyc, cobrancas }) {
   )
 }
 
+// ── TV components ────────────────────────────────────────────
+
+function TVKpi({ label, value, delta, sub, gold }) {
+  return (
+    <div className={`tv-kpi${gold ? ' tv-kpi-gold' : ''}`}>
+      <div className="tv-kpi-label">{label}</div>
+      <div className="tv-kpi-value">{value}</div>
+      {delta && <div className="tv-kpi-delta">↑ {delta}</div>}
+      {sub && !delta && <div className="tv-kpi-sub">{sub}</div>}
+    </div>
+  )
+}
+
+function TVAportes({ resumo }) {
+  if (!resumo) return null
+  const { semana_total, semana_ativos, semana_novos, anterior_total, variacao_pct } = resumo
+  const max = Math.max(semana_total, anterior_total, 1)
+  const up = variacao_pct >= 0
+  return (
+    <div className="tv-card">
+      <div className="tv-card-label">Aportes da semana</div>
+      <div className="tv-card-hero">{formatCurrency(semana_total, true)}</div>
+      <div className={`tv-delta ${up ? 'tv-delta-up' : 'tv-delta-down'}`}>
+        {up ? '↑' : '↓'} {Math.abs(variacao_pct).toFixed(1)}% vs semana anterior
+      </div>
+      <div className="tv-bars">
+        <div className="tv-bar-row">
+          <span className="tv-bar-lbl tv-gold-txt">Esta semana</span>
+          <div className="tv-bar-track">
+            <div className="tv-bar-fill" style={{ width: `${(semana_total / max) * 100}%`, background: 'var(--bw-gold)' }} />
+          </div>
+          <span className="tv-bar-val">{formatCurrency(semana_total, true)}</span>
+        </div>
+        <div className="tv-bar-row">
+          <span className="tv-bar-lbl">Semana anterior</span>
+          <div className="tv-bar-track">
+            <div className="tv-bar-fill" style={{ width: `${(anterior_total / max) * 100}%`, background: '#444440' }} />
+          </div>
+          <span className="tv-bar-val tv-muted">{formatCurrency(anterior_total, true)}</span>
+        </div>
+      </div>
+      <div className="tv-split">
+        <div style={{ flex: 1 }}>
+          <div className="tv-split-lbl">Clientes ativos</div>
+          <div className="tv-split-val">{formatCurrency(semana_ativos, true)}</div>
+        </div>
+        <div className="tv-split-sep" />
+        <div style={{ flex: 1, textAlign: 'right' }}>
+          <div className="tv-split-lbl">Novos clientes</div>
+          <div className="tv-split-val">{formatCurrency(semana_novos, true)}</div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function TVPipeline({ etapas }) {
+  const maxQtd = Math.max(...etapas.map(e => e.quantidade), 1)
+  const totalLeads = etapas.reduce((s, e) => s + e.quantidade, 0)
+  const totalVol = etapas.reduce((s, e) => s + (e.volume_estimado || 0), 0)
+  return (
+    <div className="tv-card">
+      <div className="tv-card-label">Pipeline de leads</div>
+      <div className="tv-card-hero">{totalLeads} <span className="tv-hero-unit">leads</span></div>
+      <div className="tv-card-sub">{formatCurrency(totalVol, true)} estimado</div>
+      <div className="tv-list">
+        {etapas.map(e => {
+          const color = ETAPA_COLORS[e.etapa] || '#888'
+          const label = ETAPA_LABELS[e.etapa] || e.etapa
+          const pct = (e.quantidade / maxQtd) * 100
+          return (
+            <div key={e.etapa} className="tv-list-row">
+              <div className="tv-dot" style={{ background: color }} />
+              <div className="tv-list-name">{label}</div>
+              <div className="tv-list-bar-wrap">
+                <div className="tv-list-bar" style={{ width: `${pct}%`, background: color }} />
+              </div>
+              <div className="tv-list-count">{e.quantidade}</div>
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
+function TVOnboarding({ consolidado }) {
+  if (!consolidado) return null
+  const total = consolidado.total
+  const overallDone = ONBOARDING_STEPS.reduce((s, step) => s + consolidado[step.key], 0)
+  const overallTotal = ONBOARDING_STEPS.length * total
+  const pctGeral = overallTotal > 0 ? Math.round((overallDone / overallTotal) * 100) : 0
+  return (
+    <div className="tv-card">
+      <div className="tv-card-label">Onboarding</div>
+      <div className="tv-card-hero">{pctGeral}% <span className="tv-hero-unit">concluído</span></div>
+      <div className="tv-card-sub">{total} clientes em processo</div>
+      <div className="tv-list">
+        {ONBOARDING_STEPS.map(step => {
+          const done = consolidado[step.key]
+          const pct = total > 0 ? (done / total) * 100 : 0
+          const color = pct === 100 ? 'var(--bw-ok)' : pct >= 60 ? 'var(--bw-gold)' : 'var(--bw-alert)'
+          return (
+            <div key={step.key} className="tv-list-row">
+              <div className="tv-list-name">{step.label}</div>
+              <div className="tv-list-bar-wrap">
+                <div className="tv-list-bar" style={{ width: `${pct}%`, background: color }} />
+              </div>
+              <div className="tv-list-count" style={{ color }}>{done}/{total}</div>
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
+function TVAlerts({ kyc, cobrancas }) {
+  return (
+    <div className="tv-alerts-row">
+      <div className="tv-card">
+        <div className="tv-card-label">KYC / Suitability</div>
+        <div className="tv-alert-grid">
+          <div className="tv-alert-item tv-ai-alert"><span>Suitability vencido</span><span className="tv-ai-num">{kyc.suitability_vencido}</span></div>
+          <div className="tv-alert-item tv-ai-warn"><span>Vence em 30 dias</span><span className="tv-ai-num">{kyc.vence_30_dias}</span></div>
+          <div className="tv-alert-item tv-ai-info"><span>KYC em revisão</span><span className="tv-ai-num">{kyc.kyc_em_revisao}</span></div>
+          <div className="tv-alert-item tv-ai-ok"><span>Regularizados no mês</span><span className="tv-ai-num">{kyc.regularizados_mes}</span></div>
+        </div>
+      </div>
+      <div className="tv-card">
+        <div className="tv-card-label">Cobranças — fee sobre PL</div>
+        <div className="tv-alert-grid">
+          <div className="tv-alert-item tv-ai-alert"><span>Fee em atraso</span><span className="tv-ai-num">{formatCurrency(cobrancas.em_atraso)}</span></div>
+          <div className="tv-alert-item tv-ai-warn"><span>Vence em 7 dias</span><span className="tv-ai-num">{formatCurrency(cobrancas.vencendo_7_dias)}</span></div>
+          <div className="tv-alert-item tv-ai-info"><span>Abaixo do mínimo</span><span className="tv-ai-num">{cobrancas.abaixo_minimo}</span></div>
+          <div className="tv-alert-item tv-ai-ok"><span>Recebido no mês</span><span className="tv-ai-num">{formatCurrency(cobrancas.recebido)}</span></div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ── Main App ────────────────────────────────────────────────
 
 export default function App() {
   const { data, loading } = useDashboard()
+  const [view, setView] = useState('tv')
 
   if (loading) {
     return (
@@ -203,6 +352,39 @@ export default function App() {
   }
 
   const { custodia, novosClientes, pipeline, onboardingConsolidado, onboardingClientes, kyc, cobrancas, aportesSemana, aportesSemanaDetalhe } = data
+  const ticket = custodia.total / custodia.total_clientes
+  const pipeTotal = pipeline.reduce((s, e) => s + e.quantidade, 0)
+  const period = new Date().toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })
+
+  if (view === 'tv') {
+    return (
+      <div className="tv-root">
+        <div className="tv-header">
+          <div>
+            <div className="logo-text">BRAZIL WEALTH</div>
+            <div className="logo-sub">Consultoria de Investimentos</div>
+          </div>
+          <ViewTabs view={view} setView={setView} />
+          <div className="period">{period}</div>
+        </div>
+
+        <div className="tv-kpis">
+          <TVKpi label="Custódia total" value={formatCurrency(custodia.total, true)} delta="+8,2% no mês" gold />
+          <TVKpi label="Clientes ativos" value={custodia.total_clientes} sub="+6 este mês" />
+          <TVKpi label="Ticket médio" value={formatCurrency(ticket, true)} sub="por cliente" />
+          <TVKpi label="No pipeline" value={pipeTotal} sub="leads ativos" />
+        </div>
+
+        <div className="tv-middle">
+          <TVAportes resumo={aportesSemana} />
+          <TVPipeline etapas={pipeline} />
+          <TVOnboarding consolidado={onboardingConsolidado} />
+        </div>
+
+        <TVAlerts kyc={kyc} cobrancas={cobrancas} />
+      </div>
+    )
+  }
 
   return (
     <div className="app">
@@ -212,15 +394,18 @@ export default function App() {
             <div className="logo-text">BRAZIL WEALTH</div>
             <div className="logo-sub">Consultoria de Investimentos</div>
           </div>
-          <div className="period">{new Date().toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}</div>
+          <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+            <ViewTabs view={view} setView={setView} />
+            <div className="period">{period}</div>
+          </div>
         </div>
 
         <SectionLabel>Visão Geral</SectionLabel>
         <div className="metric-grid">
           <MetricCard label="Custódia total" value={formatCurrency(custodia.total, true)} delta="+8,2% no mês" gold />
           <MetricCard label="Clientes ativos" value={custodia.total_clientes} sub="+6 este mês" />
-          <MetricCard label="Ticket médio" value={formatCurrency(custodia.total / custodia.total_clientes, true)} sub="por cliente" />
-          <MetricCard label="No pipe" value={pipeline.reduce((s, e) => s + e.quantidade, 0)} sub="leads ativos" />
+          <MetricCard label="Ticket médio" value={formatCurrency(ticket, true)} sub="por cliente" />
+          <MetricCard label="No pipe" value={pipeTotal} sub="leads ativos" />
         </div>
 
         <SectionLabel>Aportes Semanais</SectionLabel>
