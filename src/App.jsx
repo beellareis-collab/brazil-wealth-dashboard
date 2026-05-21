@@ -226,11 +226,16 @@ export default function App() {
         <SectionLabel>Aportes Semanais</SectionLabel>
         <AportesSemana resumo={aportesSemana} detalhe={aportesSemanaDetalhe} />
 
-        <SectionLabel>Novos Clientes — {new Date().toLocaleDateString('pt-BR', { month: 'long' })}</SectionLabel>
-        <NovosClientes clientes={novosClientes} />
-
-        <SectionLabel>Funil de Prospecção</SectionLabel>
-        <Pipeline etapas={pipeline} />
+        <div className="layout-2col">
+          <div>
+            <SectionLabel>Novos Clientes — {new Date().toLocaleDateString('pt-BR', { month: 'long' })}</SectionLabel>
+            <NovosClientes clientes={novosClientes} />
+          </div>
+          <div>
+            <SectionLabel>Funil de Prospecção</SectionLabel>
+            <Pipeline etapas={pipeline} />
+          </div>
+        </div>
 
         <SectionLabel>Onboarding</SectionLabel>
         <OnboardingSection consolidado={onboardingConsolidado} clientes={onboardingClientes} />
