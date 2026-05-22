@@ -21,6 +21,8 @@ export function useDashboard() {
     try {
       setLoading(true)
 
+      const safe = (promise) => promise.catch(() => ({ data: null }))
+
       const [
         { data: custodia },
         { data: novosClientes },
@@ -32,23 +34,23 @@ export function useDashboard() {
         { data: aportesSemana },
         { data: aportesSemanaDetalhe },
       ] = await Promise.all([
-        supabase.from('v_custodia_total').select('*').single(),
-        supabase
+        safe(supabase.from('v_custodia_total').select('*').single()),
+        safe(supabase
           .from('clientes')
           .select('id, nome, tipo, perfil, custodia, data_entrada, consultores(nome)')
           .eq('ativo', true)
           .gte('data_entrada', new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0])
-          .order('custodia', { ascending: false }),
-        supabaseRD.from('bw_deals').select('stage, value, won, lost'),
-        supabase.from('v_onboarding_consolidado').select('*').single(),
-        supabase
+          .order('custodia', { ascending: false })),
+        safe(supabaseRD.from('bw_deals').select('stage, value, won, lost')),
+        safe(supabase.from('v_onboarding_consolidado').select('*').single()),
+        safe(supabase
           .from('onboarding')
           .select('*, clientes(nome)')
-          .order('updated_at', { ascending: false }),
-        supabase.rpc('get_kyc_summary'),
-        supabase.from('v_cobrancas_mes').select('*').single(),
-        supabase.from('v_aportes_semana').select('*').single(),
-        supabase.from('v_aportes_semana_detalhe').select('*').order('data_aporte', { ascending: false }),
+          .order('updated_at', { ascending: false })),
+        safe(supabase.rpc('get_kyc_summary')),
+        safe(supabase.from('v_cobrancas_mes').select('*').single()),
+        safe(supabase.from('v_aportes_semana').select('*').single()),
+        safe(supabase.from('v_aportes_semana_detalhe').select('*').order('data_aporte', { ascending: false })),
       ])
 
       // Agrega bw_deals por etapa — exclui negociações ganhas/perdidas
@@ -101,9 +103,9 @@ export function useDashboard() {
         aportesSemanaDetalhe: aportesSemanaDetalhe?.length ? aportesSemanaDetalhe : mockData.aportesSemanaDetalhe,
       })
     } catch (err) {
-      console.error(err)
+      console.error('fetchAll fatal:', err)
       setError(err)
-      setData(mockData)
+      setData(prev => prev || mockData)
     } finally {
       setLoading(false)
     }

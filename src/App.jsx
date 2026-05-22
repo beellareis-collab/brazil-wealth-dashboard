@@ -188,7 +188,9 @@ function Controles({ kyc, cobrancas }) {
         <div className="card-title">Cobranças — fee sobre PL</div>
         <CtrlRow icon="⚠" type="alert" title="Fee em atraso" sub={`${cobrancas.clientes_inadimplentes} clientes`} badge={formatCurrency(cobrancas.em_atraso)} />
         <CtrlRow icon="◷" type="warn" title="Vence em 7 dias" sub={`${cobrancas.qtd_vencendo_7_dias} cobranças`} badge={formatCurrency(cobrancas.vencendo_7_dias)} />
-        <CtrlRow icon="↓" type="info" title="Abaixo do mínimo" sub="fee < R$ 600/mês" badge={`${cobrancas.abaixo_minimo} cliente`} />
+        {cobrancas.abaixo_minimo != null && (
+          <CtrlRow icon="↓" type="info" title="Abaixo do mínimo" sub="fee < R$ 600/mês" badge={`${cobrancas.abaixo_minimo} cliente`} />
+        )}
         <CtrlRow icon="✓" type="ok" title="Recebido no mês" sub={new Date().toLocaleString('pt-BR', { month: 'long', year: 'numeric' })} badge={formatCurrency(cobrancas.recebido)} />
       </div>
     </div>
