@@ -55,10 +55,10 @@ export function useDashboard() {
         safe(supabase.from('v_custodia_total').select('*').single(), 'custodia'),
         safe(supabase.schema('crm')
           .from('clients')
-          .select('id, nome, tipo, perfil, custodia, data_entrada, consultores(nome)')
-          .eq('ativo', true)
-          .gte('data_entrada', new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0])
-          .order('custodia', { ascending: false }), 'clientes'),
+          .select('id, name, person_type, investor_profile_code, net_worth, contract_signed_at, consultant_id')
+          .eq('is_active', true)
+          .gte('contract_signed_at', new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0])
+          .order('contract_signed_at', { ascending: false }), 'clientes'),
         safe(supabaseRD.from('bw_deals').select('stage, value, won, lost'), 'bw_deals'),
         safe(supabase.from('v_onboarding_consolidado').select('*').single(), 'onboarding_consolidado'),
         safe(supabase
@@ -120,8 +120,13 @@ export function useDashboard() {
         }, { recebido: 0, qtd_fechado: 0, faturado: 0, qtd_faturado: 0, rascunho: 0, qtd_rascunho: 0 })
 
       const novosFormatted = (novosClientes || []).map(c => ({
-        ...c,
-        consultor: c.consultores?.nome || '—',
+        id:          c.id,
+        nome:        c.name,
+        tipo:        c.person_type === 'legal' ? 'PJ' : 'PF',
+        perfil:      c.investor_profile_code || '—',
+        custodia:    c.net_worth || null,
+        data_entrada: c.contract_signed_at,
+        consultor:   '—',
       }))
 
       const onbClientesFormatted = (onboardingClientes || []).map(o => ({
