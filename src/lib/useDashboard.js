@@ -57,8 +57,22 @@ export function useDashboard() {
           acc[key].volume_estimado += Number(deal.value) || 0
           return acc
         }, {})
+      const STAGE_ORDER = [
+        'novos_contatos', 'novos contatos',
+        'primeiro_contato', '1 contato',
+        'carteira_enviada', 'carteira enviada',
+        'consolidacao', 'consolidação',
+        'r1',
+        'negociacao', 'negociação',
+        'documentacao', 'documentação',
+        'contrato_assinado', 'contrato assinado',
+      ]
+      const stageIdx = (etapa) => {
+        const i = STAGE_ORDER.findIndex(s => s.toLowerCase() === etapa.toLowerCase())
+        return i === -1 ? 999 : i
+      }
       const pipeline = Object.keys(pipelineMap).length > 0
-        ? Object.values(pipelineMap)
+        ? Object.values(pipelineMap).sort((a, b) => stageIdx(a.etapa) - stageIdx(b.etapa))
         : mockData.pipeline
 
       const novosFormatted = (novosClientes || []).map(c => ({
