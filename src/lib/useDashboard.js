@@ -24,7 +24,7 @@ export function useDashboard() {
       const [
         { data: custodia },
         { data: novosClientes },
-        { data: pipeline },
+        { data: dealsRaw },
         { data: onboardingConsolidado },
         { data: onboardingClientes },
         { data: kyc },
@@ -37,7 +37,7 @@ export function useDashboard() {
           .eq('ativo', true)
           .gte('data_entrada', new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0])
           .order('custodia', { ascending: false }),
-        supabase.from('v_pipeline_etapas').select('*'),
+        supabase.from('bw_deals').select('stage, value, won, lost'),
         supabase.from('v_onboarding_consolidado').select('*').single(),
         supabase
           .from('onboarding')
@@ -46,6 +46,20 @@ export function useDashboard() {
         supabase.rpc('get_kyc_summary'),
         supabase.from('v_cobrancas_mes').select('*').single(),
       ])
+
+      // Agrega bw_deals por etapa — exclui negociações ganhas/perdidas
+      const pipelineMap = (dealsRaw || [])
+        .filter(d => d.won !== true && d.lost !== true)
+        .reduce((acc, deal) => {
+          const key = deal.stage || 'Sem etapa'
+          if (!acc[key]) acc[key] = { etapa: key, quantidade: 0, volume_estimado: 0 }
+          acc[key].quantidade++
+          acc[key].volume_estimado += Number(deal.value) || 0
+          return acc
+        }, {})
+      const pipeline = Object.keys(pipelineMap).length > 0
+        ? Object.values(pipelineMap)
+        : mockData.pipeline
 
       const novosFormatted = (novosClientes || []).map(c => ({
         ...c,
