@@ -21,7 +21,13 @@ export function useDashboard() {
     try {
       setLoading(true)
 
-      const safe = (promise) => promise.catch(() => ({ data: null }))
+      const safe = (promise, label) => promise.then(res => {
+        if (res.error) console.warn(`[dash:${label}]`, res.error.message)
+        return { data: res.data }
+      }).catch(err => {
+        console.error(`[dash:${label}] threw:`, err)
+        return { data: null }
+      })
 
       const [
         { data: custodia },
@@ -34,23 +40,23 @@ export function useDashboard() {
         { data: aportesSemana },
         { data: aportesSemanaDetalhe },
       ] = await Promise.all([
-        safe(supabase.from('v_custodia_total').select('*').single()),
+        safe(supabase.from('v_custodia_total').select('*').single(), 'custodia'),
         safe(supabase
           .from('clientes')
           .select('id, nome, tipo, perfil, custodia, data_entrada, consultores(nome)')
           .eq('ativo', true)
           .gte('data_entrada', new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0])
-          .order('custodia', { ascending: false })),
-        safe(supabaseRD.from('bw_deals').select('stage, value, won, lost')),
-        safe(supabase.from('v_onboarding_consolidado').select('*').single()),
+          .order('custodia', { ascending: false }), 'clientes'),
+        safe(supabaseRD.from('bw_deals').select('stage, value, won, lost'), 'bw_deals'),
+        safe(supabase.from('v_onboarding_consolidado').select('*').single(), 'onboarding_consolidado'),
         safe(supabase
           .from('onboarding')
           .select('*, clientes(nome)')
-          .order('updated_at', { ascending: false })),
-        safe(supabase.rpc('get_kyc_summary')),
-        safe(supabase.from('v_cobrancas_mes').select('*').single()),
-        safe(supabase.from('v_aportes_semana').select('*').single()),
-        safe(supabase.from('v_aportes_semana_detalhe').select('*').order('data_aporte', { ascending: false })),
+          .order('updated_at', { ascending: false }), 'onboarding'),
+        safe(supabase.rpc('get_kyc_summary'), 'kyc'),
+        safe(supabase.from('v_cobrancas_mes').select('*').single(), 'cobrancas'),
+        safe(supabase.from('v_aportes_semana').select('*').single(), 'aportes_semana'),
+        safe(supabase.from('v_aportes_semana_detalhe').select('*').order('data_aporte', { ascending: false }), 'aportes_detalhe'),
       ])
 
       // Agrega bw_deals por etapa — exclui negociações ganhas/perdidas
