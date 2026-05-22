@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from './supabase'
 import { mockData } from './mockData'
+import { ONBOARDING_TEMPLATE_KEY_MAP, ONBOARDING_STEPS } from './utils'
 
 const USE_MOCK = !process.env.REACT_APP_SUPABASE_URL && !process.env.REACT_APP_SUPABASE_URL_RD
 
@@ -48,8 +49,7 @@ export function useDashboard() {
         { data: custodia },
         { data: novosClientes },
         { data: dealsRaw },
-        { data: onboardingConsolidado },
-        { data: onboardingClientes },
+        { data: onboardingItemsRaw },
         { data: kycClientsRaw },
         { data: feesRaw },
         { data: aportesSemana },
@@ -66,8 +66,10 @@ export function useDashboard() {
           .from('deals')
           .select('id, minimum_monthly_fee, pipeline_stages(name, stage_order)')
           .eq('is_active', true), 'deals'),
-        safe(supabase.from('v_onboarding_consolidado').select('*').single(), 'onboarding_consolidado'),
-        safe(supabase.from('onboarding').select('*, clientes(nome)').order('updated_at', { ascending: false }), 'onboarding'),
+        safe(supabase.schema('crm')
+          .from('client_onboarding_items')
+          .select('client_id, template_key, completed_at, clients(name)')
+          .in('template_key', Object.keys(ONBOARDING_TEMPLATE_KEY_MAP)), 'onboarding'),
         safe(supabase.schema('crm')
           .from('clients')
           .select('suitability_expires_at, suitability_last_completed_at, suitability_status')
@@ -141,10 +143,23 @@ export function useDashboard() {
         consultor:    c.consultants?.name || '—',
       }))
 
-      const onbClientesFormatted = (onboardingClientes || []).map(o => ({
-        ...o,
-        cliente_nome: o.clientes?.nome || '—',
-      }))
+      // Agrega client_onboarding_items por cliente
+      const stepKeys = ONBOARDING_STEPS.map(s => s.key)
+      const emptySteps = Object.fromEntries(stepKeys.map(k => [k, false]))
+      const clientMap = (onboardingItemsRaw || []).reduce((acc, item) => {
+        const stepKey = ONBOARDING_TEMPLATE_KEY_MAP[item.template_key]
+        if (!stepKey) return acc
+        if (!acc[item.client_id]) {
+          acc[item.client_id] = { cliente_id: item.client_id, cliente_nome: item.clients?.name || '—', ...emptySteps }
+        }
+        acc[item.client_id][stepKey] = item.completed_at != null
+        return acc
+      }, {})
+      const onbClientesFormatted = Object.values(clientMap)
+      const onboardingConsolidado = onbClientesFormatted.length ? {
+        total: onbClientesFormatted.length,
+        ...Object.fromEntries(stepKeys.map(k => [k, onbClientesFormatted.filter(c => c[k]).length])),
+      } : null
 
       setData({
         custodia:              custodia || EMPTY.custodia,

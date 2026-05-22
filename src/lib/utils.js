@@ -48,10 +48,19 @@ export const ETAPA_COLORS = {
 }
 
 export const ONBOARDING_STEPS = [
-  { key: 'grupos_whatsapp', label: 'Grupos de WhatsApp' },
-  { key: 'adicionar_comunidade', label: 'Adicionar à comunidade' },
-  { key: 'email_boas_vindas', label: 'E-mail de boas-vindas' },
-  { key: 'msg_ativacao_grupo', label: 'Mensagem de ativação no grupo' },
-  { key: 'msg_inicio_processo', label: 'Mensagem explicando o início do processo' },
-  { key: 'abertura_conta_transferencia', label: 'Abertura de conta / transferência de custódia' },
+  { key: 'email_boas_vindas',          label: 'E-mail de boas-vindas' },
+  { key: 'adicionar_comunidade',       label: 'Adicionar à comunidade do WhatsApp' },
+  { key: 'grupos_whatsapp',            label: 'Criar grupo com o cliente' },
+  { key: 'msg_ativacao_grupo',         label: 'Mensagem de ativação do grupo' },
+  { key: 'msg_inicio_processo',        label: 'Mensagem explicando o início do processo' },
+  { key: 'abertura_conta_transferencia', label: 'Transferência ou abertura de conta' },
 ]
+
+export const ONBOARDING_TEMPLATE_KEY_MAP = {
+  'welcome-email':             'email_boas_vindas',
+  'whatsapp-community':        'adicionar_comunidade',
+  'client-group-creation':     'grupos_whatsapp',
+  'group-activation-message':  'msg_ativacao_grupo',
+  'process-kickoff-message':   'msg_inicio_processo',
+  'account-transfer-guidance': 'abertura_conta_transferencia',
+}
