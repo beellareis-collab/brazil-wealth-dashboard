@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { supabase } from './supabase'
+import { supabase, supabaseRD } from './supabase'
 import { mockData } from './mockData'
 import { ONBOARDING_TEMPLATE_KEY_MAP, ONBOARDING_STEPS } from './utils'
 
@@ -62,13 +62,10 @@ export function useDashboard() {
           .eq('is_active', true)
           .gte('contract_signed_at', startOfMonth)
           .order('contract_signed_at', { ascending: false }), 'clientes'),
-        safe(supabase.schema('crm')
-          .from('deals')
-          .select('id, minimum_monthly_fee, pipeline_stages(name, stage_order)')
-          .eq('is_active', true), 'deals'),
+        safe(supabaseRD.from('bw_deals').select('stage, value, won, lost'), 'bw_deals'),
         safe(supabase.schema('crm')
           .from('client_onboarding_items')
-          .select('client_id, template_key, completed_at, clients(name)')
+          .select('client_id, template_key, completed_at')
           .in('template_key', Object.keys(ONBOARDING_TEMPLATE_KEY_MAP)), 'onboarding'),
         safe(supabase.schema('crm')
           .from('clients')
@@ -79,19 +76,32 @@ export function useDashboard() {
         safe(supabase.from('v_aportes_semana_detalhe').select('*').order('data_aporte', { ascending: false }), 'aportes_detalhe'),
       ])
 
-      // Pipeline a partir de crm.deals — ordena pelo stage_order do banco
-      const pipelineMap = (dealsRaw || []).reduce((acc, deal) => {
-        const stageName = deal.pipeline_stages?.name || 'Sem etapa'
-        const stageOrder = deal.pipeline_stages?.stage_order ?? 999
-        if (!acc[stageName]) acc[stageName] = { etapa: stageName, quantidade: 0, volume_estimado: 0, _order: stageOrder }
-        acc[stageName].quantidade++
-        acc[stageName].volume_estimado += Number(deal.minimum_monthly_fee) * 12 || 0
-        return acc
-      }, {})
+      // Pipeline a partir de bw_deals (RD Station)
+      const STAGE_ORDER = [
+        'novos_contatos', 'novos contatos',
+        'primeiro_contato', '1 contato',
+        'carteira_enviada', 'carteira enviada',
+        'consolidacao', 'consolidação',
+        'r1',
+        'negociacao', 'negociação',
+        'documentacao', 'documentação',
+        'contrato_assinado', 'contrato assinado',
+      ]
+      const stageIdx = (etapa) => {
+        const i = STAGE_ORDER.findIndex(s => s.toLowerCase() === etapa.toLowerCase())
+        return i === -1 ? 999 : i
+      }
+      const pipelineMap = (dealsRaw || [])
+        .filter(d => d.won !== true && d.lost !== true)
+        .reduce((acc, deal) => {
+          const key = deal.stage || 'Sem etapa'
+          if (!acc[key]) acc[key] = { etapa: key, quantidade: 0, volume_estimado: 0 }
+          acc[key].quantidade++
+          acc[key].volume_estimado += Number(deal.value) || 0
+          return acc
+        }, {})
       const pipeline = Object.keys(pipelineMap).length > 0
-        ? Object.values(pipelineMap)
-            .sort((a, b) => a._order - b._order)
-            .map(({ _order, ...rest }) => rest)
+        ? Object.values(pipelineMap).sort((a, b) => stageIdx(a.etapa) - stageIdx(b.etapa))
         : EMPTY.pipeline
 
       // KYC a partir dos campos de suitability em crm.clients
@@ -150,12 +160,13 @@ export function useDashboard() {
         const stepKey = ONBOARDING_TEMPLATE_KEY_MAP[item.template_key]
         if (!stepKey) return acc
         if (!acc[item.client_id]) {
-          acc[item.client_id] = { cliente_id: item.client_id, cliente_nome: item.clients?.name || '—', ...emptySteps }
+          acc[item.client_id] = { cliente_id: item.client_id, cliente_nome: '—', ...emptySteps }
         }
         acc[item.client_id][stepKey] = item.completed_at != null
         return acc
       }, {})
       const onbClientesFormatted = Object.values(clientMap)
+      console.log(`[dash:onboarding] ${onbClientesFormatted.length} clientes encontrados`)
       const onboardingConsolidado = onbClientesFormatted.length ? {
         total: onbClientesFormatted.length,
         ...Object.fromEntries(stepKeys.map(k => [k, onbClientesFormatted.filter(c => c[k]).length])),
@@ -165,8 +176,8 @@ export function useDashboard() {
         custodia:              custodia || EMPTY.custodia,
         novosClientes:         novosFormatted.length ? novosFormatted : EMPTY.novosClientes,
         pipeline:              pipeline?.length ? pipeline : EMPTY.pipeline,
-        onboardingConsolidado: onboardingConsolidado || EMPTY.onboardingConsolidado,
-        onboardingClientes:    onbClientesFormatted.length ? onbClientesFormatted : EMPTY.onboardingClientes,
+        onboardingConsolidado: onboardingConsolidado || mockData.onboardingConsolidado,
+        onboardingClientes:    onbClientesFormatted.length ? onbClientesFormatted : mockData.onboardingClientes,
         kyc:                   kycClientsRaw ? kyc : EMPTY.kyc,
         cobrancas:             feesRaw ? cobrancas : EMPTY.cobrancas,
         aportesSemana:         aportesSemana || EMPTY.aportesSemana,
