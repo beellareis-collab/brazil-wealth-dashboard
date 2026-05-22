@@ -4,6 +4,18 @@ import { mockData } from './mockData'
 
 const USE_MOCK = !process.env.REACT_APP_SUPABASE_URL && !process.env.REACT_APP_SUPABASE_URL_RD
 
+const EMPTY = {
+  custodia:              { total: null, total_clientes: null },
+  novosClientes:         [],
+  pipeline:              [],
+  onboardingConsolidado: null,
+  onboardingClientes:    [],
+  kyc:      { suitability_vencido: null, vence_30_dias: null, kyc_em_revisao: null, regularizados_mes: null },
+  cobrancas: { recebido: null, em_atraso: null, clientes_inadimplentes: null, vencendo_7_dias: null, qtd_vencendo_7_dias: null },
+  aportesSemana:        null,
+  aportesSemanaDetalhe: [],
+}
+
 export function useDashboard() {
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -85,7 +97,7 @@ export function useDashboard() {
       }
       const pipeline = Object.keys(pipelineMap).length > 0
         ? Object.values(pipelineMap).sort((a, b) => stageIdx(a.etapa) - stageIdx(b.etapa))
-        : mockData.pipeline
+        : EMPTY.pipeline
 
       const novosFormatted = (novosClientes || []).map(c => ({
         ...c,
@@ -98,20 +110,20 @@ export function useDashboard() {
       }))
 
       setData({
-        custodia: custodia || mockData.custodia,
-        novosClientes: novosFormatted.length ? novosFormatted : mockData.novosClientes,
-        pipeline: pipeline?.length ? pipeline : mockData.pipeline,
-        onboardingConsolidado: onboardingConsolidado || mockData.onboardingConsolidado,
-        onboardingClientes: onbClientesFormatted.length ? onbClientesFormatted : mockData.onboardingClientes,
-        kyc: kyc || mockData.kyc,
-        cobrancas: cobrancas || mockData.cobrancas,
-        aportesSemana: aportesSemana || mockData.aportesSemana,
-        aportesSemanaDetalhe: aportesSemanaDetalhe?.length ? aportesSemanaDetalhe : mockData.aportesSemanaDetalhe,
+        custodia:              custodia || EMPTY.custodia,
+        novosClientes:         novosFormatted.length ? novosFormatted : EMPTY.novosClientes,
+        pipeline:              pipeline?.length ? pipeline : EMPTY.pipeline,
+        onboardingConsolidado: onboardingConsolidado || EMPTY.onboardingConsolidado,
+        onboardingClientes:    onbClientesFormatted.length ? onbClientesFormatted : EMPTY.onboardingClientes,
+        kyc:                   kyc || EMPTY.kyc,
+        cobrancas:             cobrancas || EMPTY.cobrancas,
+        aportesSemana:         aportesSemana || EMPTY.aportesSemana,
+        aportesSemanaDetalhe:  aportesSemanaDetalhe?.length ? aportesSemanaDetalhe : EMPTY.aportesSemanaDetalhe,
       })
     } catch (err) {
       console.error('fetchAll fatal:', err)
       setError(err)
-      setData(prev => prev || mockData)
+      setData(prev => prev || EMPTY)
     } finally {
       setLoading(false)
     }

@@ -179,15 +179,15 @@ function Controles({ kyc, cobrancas }) {
     <div className="cards-2col">
       <div className="card">
         <div className="card-title">KYC / Suitability</div>
-        <CtrlRow icon="⚠" type="alert" title="Suitability vencido" sub={`${kyc.suitability_vencido} clientes`} badge={String(kyc.suitability_vencido)} />
-        <CtrlRow icon="◷" type="warn" title="Vence em 30 dias" sub={`${kyc.vence_30_dias} clientes`} badge={String(kyc.vence_30_dias)} />
-        <CtrlRow icon="☰" type="info" title="KYC em revisão" sub={`${kyc.kyc_em_revisao} clientes`} badge={String(kyc.kyc_em_revisao)} />
-        <CtrlRow icon="✓" type="ok" title="Regularizados" sub="este mês" badge={String(kyc.regularizados_mes)} />
+        <CtrlRow icon="⚠" type="alert" title="Suitability vencido" sub={`${kyc.suitability_vencido ?? '—'} clientes`} badge={kyc.suitability_vencido ?? '—'} />
+        <CtrlRow icon="◷" type="warn" title="Vence em 30 dias" sub={`${kyc.vence_30_dias ?? '—'} clientes`} badge={kyc.vence_30_dias ?? '—'} />
+        <CtrlRow icon="☰" type="info" title="KYC em revisão" sub={`${kyc.kyc_em_revisao ?? '—'} clientes`} badge={kyc.kyc_em_revisao ?? '—'} />
+        <CtrlRow icon="✓" type="ok" title="Regularizados" sub="este mês" badge={kyc.regularizados_mes ?? '—'} />
       </div>
       <div className="card">
         <div className="card-title">Cobranças — fee sobre PL</div>
-        <CtrlRow icon="⚠" type="alert" title="Fee em atraso" sub={`${cobrancas.clientes_inadimplentes} clientes`} badge={formatCurrency(cobrancas.em_atraso)} />
-        <CtrlRow icon="◷" type="warn" title="Vence em 7 dias" sub={`${cobrancas.qtd_vencendo_7_dias} cobranças`} badge={formatCurrency(cobrancas.vencendo_7_dias)} />
+        <CtrlRow icon="⚠" type="alert" title="Fee em atraso" sub={`${cobrancas.clientes_inadimplentes ?? '—'} clientes`} badge={formatCurrency(cobrancas.em_atraso)} />
+        <CtrlRow icon="◷" type="warn" title="Vence em 7 dias" sub={`${cobrancas.qtd_vencendo_7_dias ?? '—'} cobranças`} badge={formatCurrency(cobrancas.vencendo_7_dias)} />
         {cobrancas.abaixo_minimo != null && (
           <CtrlRow icon="↓" type="info" title="Abaixo do mínimo" sub="fee < R$ 600/mês" badge={`${cobrancas.abaixo_minimo} cliente`} />
         )}
@@ -283,10 +283,10 @@ function TVAlerts({ kyc, cobrancas }) {
       <div className="tv-card">
         <div className="tv-card-label">KYC / Suitability</div>
         <div className="tv-alert-grid">
-          <div className="tv-alert-item tv-ai-alert"><span>Suitability vencido</span><span className="tv-ai-num">{kyc.suitability_vencido}</span></div>
-          <div className="tv-alert-item tv-ai-warn"><span>Vence em 30 dias</span><span className="tv-ai-num">{kyc.vence_30_dias}</span></div>
-          <div className="tv-alert-item tv-ai-info"><span>KYC em revisão</span><span className="tv-ai-num">{kyc.kyc_em_revisao}</span></div>
-          <div className="tv-alert-item tv-ai-ok"><span>Regularizados no mês</span><span className="tv-ai-num">{kyc.regularizados_mes}</span></div>
+          <div className="tv-alert-item tv-ai-alert"><span>Suitability vencido</span><span className="tv-ai-num">{kyc.suitability_vencido ?? '—'}</span></div>
+          <div className="tv-alert-item tv-ai-warn"><span>Vence em 30 dias</span><span className="tv-ai-num">{kyc.vence_30_dias ?? '—'}</span></div>
+          <div className="tv-alert-item tv-ai-info"><span>KYC em revisão</span><span className="tv-ai-num">{kyc.kyc_em_revisao ?? '—'}</span></div>
+          <div className="tv-alert-item tv-ai-ok"><span>Regularizados no mês</span><span className="tv-ai-num">{kyc.regularizados_mes ?? '—'}</span></div>
         </div>
       </div>
       <div className="tv-card">
@@ -294,7 +294,9 @@ function TVAlerts({ kyc, cobrancas }) {
         <div className="tv-alert-grid">
           <div className="tv-alert-item tv-ai-alert"><span>Fee em atraso</span><span className="tv-ai-num">{formatCurrency(cobrancas.em_atraso)}</span></div>
           <div className="tv-alert-item tv-ai-warn"><span>Vence em 7 dias</span><span className="tv-ai-num">{formatCurrency(cobrancas.vencendo_7_dias)}</span></div>
-          <div className="tv-alert-item tv-ai-info"><span>Abaixo do mínimo</span><span className="tv-ai-num">{cobrancas.abaixo_minimo}</span></div>
+          {cobrancas.abaixo_minimo != null && (
+            <div className="tv-alert-item tv-ai-info"><span>Abaixo do mínimo</span><span className="tv-ai-num">{cobrancas.abaixo_minimo}</span></div>
+          )}
           <div className="tv-alert-item tv-ai-ok"><span>Recebido no mês</span><span className="tv-ai-num">{formatCurrency(cobrancas.recebido)}</span></div>
         </div>
       </div>
@@ -317,7 +319,7 @@ export default function App() {
   }
 
   const { custodia, novosClientes, pipeline, onboardingConsolidado, onboardingClientes, kyc, cobrancas, aportesSemana, aportesSemanaDetalhe } = data
-  const ticket = custodia.total_clientes > 0 ? custodia.total / custodia.total_clientes : 0
+  const ticket = (custodia.total && custodia.total_clientes) ? custodia.total / custodia.total_clientes : null
   const pipeTotal = pipeline.reduce((s, e) => s + e.quantidade, 0)
   const novosNaSemana = (aportesSemanaDetalhe || []).filter(a => a.tipo === 'novo_cliente').length
   const receitaNovaVar = aportesSemana?.anterior_novos > 0
@@ -339,7 +341,7 @@ export default function App() {
 
         <div className="tv-kpis">
           <TVKpi label="Custódia total" value={formatCurrency(custodia.total, true)} delta="+8,2% na semana" gold />
-          <TVKpi label="Clientes ativos" value={custodia.total_clientes} sub={`+${novosNaSemana} esta semana`} />
+          <TVKpi label="Clientes ativos" value={custodia.total_clientes ?? '—'} sub={`+${novosNaSemana} esta semana`} />
           <TVKpi label="Ticket médio" value={formatCurrency(ticket, true)} sub="por cliente" />
           <TVKpi label="Receita nova" value={formatCurrency(aportesSemana?.semana_novos, true)} delta={receitaNovaVar} sub={receitaNovaVar ? null : 'na semana'} />
         </div>
@@ -371,7 +373,7 @@ export default function App() {
         <SectionLabel>Visão Geral</SectionLabel>
         <div className="metric-grid">
           <MetricCard label="Custódia total" value={formatCurrency(custodia.total, true)} delta="+8,2% no mês" gold />
-          <MetricCard label="Clientes ativos" value={custodia.total_clientes} sub="+6 este mês" />
+          <MetricCard label="Clientes ativos" value={custodia.total_clientes ?? '—'} sub="+6 este mês" />
           <MetricCard label="Ticket médio" value={formatCurrency(ticket, true)} sub="por cliente" />
           <MetricCard label="No pipe" value={pipeTotal} sub="leads ativos" />
         </div>

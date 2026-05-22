@@ -11,6 +11,8 @@ if (!supabaseUrl || !supabaseAnonKey) {
 }
 if (!supabaseRdUrl || !supabaseRdAnonKey) {
   console.warn('Supabase RD Station env vars not set — pipeline usará dados mockados.')
+} else {
+  console.log('[dash:rd] conectado a', supabaseRdUrl)
 }
 
 export const supabase = createClient(
