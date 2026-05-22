@@ -29,6 +29,8 @@ export function useDashboard() {
         { data: onboardingClientes },
         { data: kyc },
         { data: cobrancas },
+        { data: aportesSemana },
+        { data: aportesSemanaDetalhe },
       ] = await Promise.all([
         supabase.from('v_custodia_total').select('*').single(),
         supabase
@@ -45,6 +47,8 @@ export function useDashboard() {
           .order('updated_at', { ascending: false }),
         supabase.rpc('get_kyc_summary'),
         supabase.from('v_cobrancas_mes').select('*').single(),
+        supabase.from('v_aportes_semana').select('*').single(),
+        supabase.from('v_aportes_semana_detalhe').select('*').order('data_aporte', { ascending: false }),
       ])
 
       // Agrega bw_deals por etapa — exclui negociações ganhas/perdidas
@@ -93,6 +97,8 @@ export function useDashboard() {
         onboardingClientes: onbClientesFormatted.length ? onbClientesFormatted : mockData.onboardingClientes,
         kyc: kyc || mockData.kyc,
         cobrancas: cobrancas || mockData.cobrancas,
+        aportesSemana: aportesSemana || mockData.aportesSemana,
+        aportesSemanaDetalhe: aportesSemanaDetalhe?.length ? aportesSemanaDetalhe : mockData.aportesSemanaDetalhe,
       })
     } catch (err) {
       console.error(err)
