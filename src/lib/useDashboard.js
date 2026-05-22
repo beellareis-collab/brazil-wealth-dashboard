@@ -54,7 +54,7 @@ export function useDashboard() {
       ] = await Promise.all([
         safe(supabase.from('v_custodia_total').select('*').single(), 'custodia'),
         safe(supabase.schema('crm')
-          .from('clientes')
+          .from('clients')
           .select('id, nome, tipo, perfil, custodia, data_entrada, consultores(nome)')
           .eq('ativo', true)
           .gte('data_entrada', new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0])
