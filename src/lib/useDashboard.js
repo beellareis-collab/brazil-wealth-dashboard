@@ -55,7 +55,7 @@ export function useDashboard() {
         safe(supabase.from('v_custodia_total').select('*').single(), 'custodia'),
         safe(supabase.schema('crm')
           .from('clients')
-          .select('id, name, person_type, investor_profile_code, net_worth, contract_signed_at, consultant_id')
+          .select('id, name, person_type, investor_profile_code, net_worth, contract_signed_at, consultants(name)')
           .eq('is_active', true)
           .gte('contract_signed_at', new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0])
           .order('contract_signed_at', { ascending: false }), 'clientes'),
@@ -126,7 +126,7 @@ export function useDashboard() {
         perfil:      c.investor_profile_code || '—',
         custodia:    c.net_worth || null,
         data_entrada: c.contract_signed_at,
-        consultor:   '—',
+        consultor:   c.consultants?.name || '—',
       }))
 
       const onbClientesFormatted = (onboardingClientes || []).map(o => ({
