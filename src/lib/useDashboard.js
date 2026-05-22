@@ -58,7 +58,7 @@ export function useDashboard() {
         safe(supabase.from('v_custodia_total').select('*').single(), 'custodia'),
         safe(supabase.schema('crm')
           .from('clients')
-          .select('id, name, person_type, investor_profile_code, net_worth, contract_signed_at, consultants(name)')
+          .select('id, name, person_type, investor_profile_code, net_worth, contract_signed_at')
           .eq('is_active', true)
           .gte('contract_signed_at', startOfMonth)
           .order('contract_signed_at', { ascending: false }), 'clientes'),
@@ -150,7 +150,7 @@ export function useDashboard() {
         perfil:       c.investor_profile_code || '—',
         custodia:     c.net_worth || null,
         data_entrada: c.contract_signed_at,
-        consultor:    c.consultants?.name || '—',
+        consultor:    '—',
       }))
 
       // Agrega client_onboarding_items por cliente
