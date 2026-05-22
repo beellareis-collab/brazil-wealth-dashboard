@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { supabase, supabaseRD } from './supabase'
+import { supabase } from './supabase'
 import { mockData } from './mockData'
 
 const USE_MOCK = !process.env.REACT_APP_SUPABASE_URL && !process.env.REACT_APP_SUPABASE_URL_RD
@@ -41,13 +41,16 @@ export function useDashboard() {
         return { data: null }
       })
 
+      const now = new Date()
+      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0]
+
       const [
         { data: custodia },
         { data: novosClientes },
         { data: dealsRaw },
         { data: onboardingConsolidado },
         { data: onboardingClientes },
-        { data: kyc },
+        { data: kycClientsRaw },
         { data: feesRaw },
         { data: aportesSemana },
         { data: aportesSemanaDetalhe },
@@ -57,50 +60,59 @@ export function useDashboard() {
           .from('clients')
           .select('id, name, person_type, investor_profile_code, net_worth, contract_signed_at, consultants(name)')
           .eq('is_active', true)
-          .gte('contract_signed_at', new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0])
+          .gte('contract_signed_at', startOfMonth)
           .order('contract_signed_at', { ascending: false }), 'clientes'),
-        safe(supabaseRD.from('bw_deals').select('stage, value, won, lost'), 'bw_deals'),
+        safe(supabase.schema('crm')
+          .from('deals')
+          .select('id, minimum_monthly_fee, pipeline_stages(name, stage_order)')
+          .eq('is_active', true), 'deals'),
         safe(supabase.from('v_onboarding_consolidado').select('*').single(), 'onboarding_consolidado'),
-        safe(supabase
-          .from('onboarding')
-          .select('*, clientes(nome)')
-          .order('updated_at', { ascending: false }), 'onboarding'),
-        safe(supabase.rpc('get_kyc_summary'), 'kyc'),
+        safe(supabase.from('onboarding').select('*, clientes(nome)').order('updated_at', { ascending: false }), 'onboarding'),
+        safe(supabase.schema('crm')
+          .from('clients')
+          .select('suitability_expires_at, suitability_last_completed_at, suitability_status')
+          .eq('is_active', true), 'kyc_clients'),
         safe(supabase.schema('financeiro').from('monthly_fee_history').select('status, billed_amount, month_reference'), 'cobrancas'),
         safe(supabase.from('v_aportes_semana').select('*').single(), 'aportes_semana'),
         safe(supabase.from('v_aportes_semana_detalhe').select('*').order('data_aporte', { ascending: false }), 'aportes_detalhe'),
       ])
 
-      // Agrega bw_deals por etapa — exclui negociações ganhas/perdidas
-      const pipelineMap = (dealsRaw || [])
-        .filter(d => d.won !== true && d.lost !== true)
-        .reduce((acc, deal) => {
-          const key = deal.stage || 'Sem etapa'
-          if (!acc[key]) acc[key] = { etapa: key, quantidade: 0, volume_estimado: 0 }
-          acc[key].quantidade++
-          acc[key].volume_estimado += Number(deal.value) || 0
-          return acc
-        }, {})
-      const STAGE_ORDER = [
-        'novos_contatos', 'novos contatos',
-        'primeiro_contato', '1 contato',
-        'carteira_enviada', 'carteira enviada',
-        'consolidacao', 'consolidação',
-        'r1',
-        'negociacao', 'negociação',
-        'documentacao', 'documentação',
-        'contrato_assinado', 'contrato assinado',
-      ]
-      const stageIdx = (etapa) => {
-        const i = STAGE_ORDER.findIndex(s => s.toLowerCase() === etapa.toLowerCase())
-        return i === -1 ? 999 : i
-      }
+      // Pipeline a partir de crm.deals — ordena pelo stage_order do banco
+      const pipelineMap = (dealsRaw || []).reduce((acc, deal) => {
+        const stageName = deal.pipeline_stages?.name || 'Sem etapa'
+        const stageOrder = deal.pipeline_stages?.stage_order ?? 999
+        if (!acc[stageName]) acc[stageName] = { etapa: stageName, quantidade: 0, volume_estimado: 0, _order: stageOrder }
+        acc[stageName].quantidade++
+        acc[stageName].volume_estimado += Number(deal.minimum_monthly_fee) * 12 || 0
+        return acc
+      }, {})
       const pipeline = Object.keys(pipelineMap).length > 0
-        ? Object.values(pipelineMap).sort((a, b) => stageIdx(a.etapa) - stageIdx(b.etapa))
+        ? Object.values(pipelineMap)
+            .sort((a, b) => a._order - b._order)
+            .map(({ _order, ...rest }) => rest)
         : EMPTY.pipeline
 
-      // Agrega monthly_fee_history por status filtrando pelo mês atual
-      const now = new Date()
+      // KYC a partir dos campos de suitability em crm.clients
+      const in30 = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000)
+      const startMonth = new Date(now.getFullYear(), now.getMonth(), 1)
+      const kyc = kycClientsRaw?.length ? {
+        suitability_vencido: kycClientsRaw.filter(c =>
+          c.suitability_expires_at && new Date(c.suitability_expires_at) < now
+        ).length,
+        vence_30_dias: kycClientsRaw.filter(c => {
+          if (!c.suitability_expires_at) return false
+          const exp = new Date(c.suitability_expires_at)
+          return exp >= now && exp <= in30
+        }).length,
+        kyc_em_revisao: kycClientsRaw.filter(c =>
+          c.suitability_status && ['pending', 'in_review', 'em_revisao'].includes(c.suitability_status)
+        ).length,
+        regularizados_mes: kycClientsRaw.filter(c =>
+          c.suitability_last_completed_at && new Date(c.suitability_last_completed_at) >= startMonth
+        ).length,
+      } : EMPTY.kyc
+
+      // Cobranças a partir de financeiro.monthly_fee_history
       const yearStr = now.getFullYear().toString()
       const monthStr = String(now.getMonth() + 1).padStart(2, '0')
       const isCurrentMonth = (ref) => {
@@ -120,13 +132,13 @@ export function useDashboard() {
         }, { recebido: 0, qtd_fechado: 0, faturado: 0, qtd_faturado: 0, rascunho: 0, qtd_rascunho: 0 })
 
       const novosFormatted = (novosClientes || []).map(c => ({
-        id:          c.id,
-        nome:        c.name,
-        tipo:        c.person_type === 'legal' ? 'PJ' : 'PF',
-        perfil:      c.investor_profile_code || '—',
-        custodia:    c.net_worth || null,
+        id:           c.id,
+        nome:         c.name,
+        tipo:         c.person_type === 'legal' ? 'PJ' : 'PF',
+        perfil:       c.investor_profile_code || '—',
+        custodia:     c.net_worth || null,
         data_entrada: c.contract_signed_at,
-        consultor:   c.consultants?.name || '—',
+        consultor:    c.consultants?.name || '—',
       }))
 
       const onbClientesFormatted = (onboardingClientes || []).map(o => ({
@@ -140,7 +152,7 @@ export function useDashboard() {
         pipeline:              pipeline?.length ? pipeline : EMPTY.pipeline,
         onboardingConsolidado: onboardingConsolidado || EMPTY.onboardingConsolidado,
         onboardingClientes:    onbClientesFormatted.length ? onbClientesFormatted : EMPTY.onboardingClientes,
-        kyc:                   kyc || EMPTY.kyc,
+        kyc:                   kycClientsRaw ? kyc : EMPTY.kyc,
         cobrancas:             feesRaw ? cobrancas : EMPTY.cobrancas,
         aportesSemana:         aportesSemana || EMPTY.aportesSemana,
         aportesSemanaDetalhe:  aportesSemanaDetalhe?.length ? aportesSemanaDetalhe : EMPTY.aportesSemanaDetalhe,
