@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { supabase } from './supabase'
+import { supabase, supabaseRD } from './supabase'
 import { mockData } from './mockData'
 
 const USE_MOCK = !process.env.REACT_APP_SUPABASE_URL
@@ -37,7 +37,7 @@ export function useDashboard() {
           .eq('ativo', true)
           .gte('data_entrada', new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0])
           .order('custodia', { ascending: false }),
-        supabase.from('bw_deals').select('stage, value, won, lost'),
+        supabaseRD.from('bw_deals').select('stage, value, won, lost'),
         supabase.from('v_onboarding_consolidado').select('*').single(),
         supabase
           .from('onboarding')
