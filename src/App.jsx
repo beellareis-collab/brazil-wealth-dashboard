@@ -186,12 +186,9 @@ function Controles({ kyc, cobrancas }) {
       </div>
       <div className="card">
         <div className="card-title">Cobranças — fee sobre PL</div>
-        <CtrlRow icon="⚠" type="alert" title="Fee em atraso" sub={`${cobrancas.clientes_inadimplentes ?? '—'} clientes`} badge={formatCurrency(cobrancas.em_atraso)} />
-        <CtrlRow icon="◷" type="warn" title="Vence em 7 dias" sub={`${cobrancas.qtd_vencendo_7_dias ?? '—'} cobranças`} badge={formatCurrency(cobrancas.vencendo_7_dias)} />
-        {cobrancas.abaixo_minimo != null && (
-          <CtrlRow icon="↓" type="info" title="Abaixo do mínimo" sub="fee < R$ 600/mês" badge={`${cobrancas.abaixo_minimo} cliente`} />
-        )}
-        <CtrlRow icon="✓" type="ok" title="Recebido no mês" sub={new Date().toLocaleString('pt-BR', { month: 'long', year: 'numeric' })} badge={formatCurrency(cobrancas.recebido)} />
+        <CtrlRow icon="✓" type="ok"   title="Fechado"         sub={`${cobrancas.qtd_fechado ?? '—'} cobranças`}  badge={formatCurrency(cobrancas.recebido)} />
+        <CtrlRow icon="◷" type="warn" title="Faturado"        sub={`${cobrancas.qtd_faturado ?? '—'} cobranças`} badge={formatCurrency(cobrancas.faturado)} />
+        <CtrlRow icon="✏" type="info" title="Em elaboração"   sub={`${cobrancas.qtd_rascunho ?? '—'} rascunhos`} badge={formatCurrency(cobrancas.rascunho)} />
       </div>
     </div>
   )
@@ -292,12 +289,9 @@ function TVAlerts({ kyc, cobrancas }) {
       <div className="tv-card">
         <div className="tv-card-label">Cobranças — fee sobre PL</div>
         <div className="tv-alert-grid">
-          <div className="tv-alert-item tv-ai-alert"><span>Fee em atraso</span><span className="tv-ai-num">{formatCurrency(cobrancas.em_atraso)}</span></div>
-          <div className="tv-alert-item tv-ai-warn"><span>Vence em 7 dias</span><span className="tv-ai-num">{formatCurrency(cobrancas.vencendo_7_dias)}</span></div>
-          {cobrancas.abaixo_minimo != null && (
-            <div className="tv-alert-item tv-ai-info"><span>Abaixo do mínimo</span><span className="tv-ai-num">{cobrancas.abaixo_minimo}</span></div>
-          )}
-          <div className="tv-alert-item tv-ai-ok"><span>Recebido no mês</span><span className="tv-ai-num">{formatCurrency(cobrancas.recebido)}</span></div>
+          <div className="tv-alert-item tv-ai-ok">  <span>Fechado</span>       <span className="tv-ai-num">{formatCurrency(cobrancas.recebido)}</span></div>
+          <div className="tv-alert-item tv-ai-warn"> <span>Faturado</span>      <span className="tv-ai-num">{formatCurrency(cobrancas.faturado)}</span></div>
+          <div className="tv-alert-item tv-ai-info"> <span>Em elaboração</span> <span className="tv-ai-num">{formatCurrency(cobrancas.rascunho)}</span></div>
         </div>
       </div>
     </div>

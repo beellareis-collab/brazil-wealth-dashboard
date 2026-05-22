@@ -11,7 +11,7 @@ const EMPTY = {
   onboardingConsolidado: null,
   onboardingClientes:    [],
   kyc:      { suitability_vencido: null, vence_30_dias: null, kyc_em_revisao: null, regularizados_mes: null },
-  cobrancas: { recebido: null, em_atraso: null, clientes_inadimplentes: null, vencendo_7_dias: null, qtd_vencendo_7_dias: null },
+  cobrancas: { recebido: null, qtd_fechado: null, faturado: null, qtd_faturado: null, rascunho: null, qtd_rascunho: null },
   aportesSemana:        null,
   aportesSemanaDetalhe: [],
 }
@@ -48,7 +48,7 @@ export function useDashboard() {
         { data: onboardingConsolidado },
         { data: onboardingClientes },
         { data: kyc },
-        { data: cobrancas },
+        { data: feesRaw },
         { data: aportesSemana },
         { data: aportesSemanaDetalhe },
       ] = await Promise.all([
@@ -66,7 +66,7 @@ export function useDashboard() {
           .select('*, clientes(nome)')
           .order('updated_at', { ascending: false }), 'onboarding'),
         safe(supabase.rpc('get_kyc_summary'), 'kyc'),
-        safe(supabase.from('v_cobrancas_mes').select('*').single(), 'cobrancas'),
+        safe(supabase.schema('financeiro').from('monthly_fee_history').select('status, billed_amount, month_reference'), 'cobrancas'),
         safe(supabase.from('v_aportes_semana').select('*').single(), 'aportes_semana'),
         safe(supabase.from('v_aportes_semana_detalhe').select('*').order('data_aporte', { ascending: false }), 'aportes_detalhe'),
       ])
@@ -99,6 +99,26 @@ export function useDashboard() {
         ? Object.values(pipelineMap).sort((a, b) => stageIdx(a.etapa) - stageIdx(b.etapa))
         : EMPTY.pipeline
 
+      // Agrega monthly_fee_history por status filtrando pelo mês atual
+      const now = new Date()
+      const yearStr = now.getFullYear().toString()
+      const monthStr = String(now.getMonth() + 1).padStart(2, '0')
+      const isCurrentMonth = (ref) => {
+        if (!ref) return false
+        const d = new Date(ref)
+        if (!isNaN(d)) return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth()
+        return String(ref).startsWith(`${yearStr}-${monthStr}`) || String(ref).includes(`${monthStr}/${yearStr}`)
+      }
+      const cobrancas = (feesRaw || [])
+        .filter(f => isCurrentMonth(f.month_reference))
+        .reduce((acc, f) => {
+          const v = Number(f.billed_amount) || 0
+          if (f.status === 'fechado')  { acc.recebido += v; acc.qtd_fechado++ }
+          if (f.status === 'faturado') { acc.faturado += v; acc.qtd_faturado++ }
+          if (f.status === 'rascunho') { acc.rascunho += v; acc.qtd_rascunho++ }
+          return acc
+        }, { recebido: 0, qtd_fechado: 0, faturado: 0, qtd_faturado: 0, rascunho: 0, qtd_rascunho: 0 })
+
       const novosFormatted = (novosClientes || []).map(c => ({
         ...c,
         consultor: c.consultores?.nome || '—',
@@ -116,7 +136,7 @@ export function useDashboard() {
         onboardingConsolidado: onboardingConsolidado || EMPTY.onboardingConsolidado,
         onboardingClientes:    onbClientesFormatted.length ? onbClientesFormatted : EMPTY.onboardingClientes,
         kyc:                   kyc || EMPTY.kyc,
-        cobrancas:             cobrancas || EMPTY.cobrancas,
+        cobrancas:             feesRaw ? cobrancas : EMPTY.cobrancas,
         aportesSemana:         aportesSemana || EMPTY.aportesSemana,
         aportesSemanaDetalhe:  aportesSemanaDetalhe?.length ? aportesSemanaDetalhe : EMPTY.aportesSemanaDetalhe,
       })
