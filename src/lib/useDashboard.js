@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { supabase, supabaseRD } from './supabase'
 import { mockData } from './mockData'
 
-const USE_MOCK = !process.env.REACT_APP_SUPABASE_URL
+const USE_MOCK = !process.env.REACT_APP_SUPABASE_URL && !process.env.REACT_APP_SUPABASE_URL_RD
 
 export function useDashboard() {
   const [data, setData] = useState(null)
