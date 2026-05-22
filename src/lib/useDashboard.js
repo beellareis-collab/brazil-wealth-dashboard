@@ -53,7 +53,7 @@ export function useDashboard() {
         { data: aportesSemanaDetalhe },
       ] = await Promise.all([
         safe(supabase.from('v_custodia_total').select('*').single(), 'custodia'),
-        safe(supabase
+        safe(supabase.schema('crm')
           .from('clientes')
           .select('id, nome, tipo, perfil, custodia, data_entrada, consultores(nome)')
           .eq('ativo', true)
