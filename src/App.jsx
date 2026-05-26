@@ -312,10 +312,9 @@ export default function App() {
     )
   }
 
-  const { custodia, novosClientes, pipeline, onboardingConsolidado, onboardingClientes, kyc, cobrancas, aportesSemana, aportesSemanaDetalhe } = data
-  const ticket = (custodia.total && custodia.total_clientes) ? custodia.total / custodia.total_clientes : null
+  const { custodia, totalAtivos, novosEstaSemana, novosClientes, pipeline, onboardingConsolidado, onboardingClientes, kyc, cobrancas, aportesSemana, aportesSemanaDetalhe } = data
+  const ticket = (custodia.total && totalAtivos) ? custodia.total / totalAtivos : null
   const pipeTotal = pipeline.reduce((s, e) => s + e.quantidade, 0)
-  const novosNaSemana = (aportesSemanaDetalhe || []).filter(a => a.tipo === 'novo_cliente').length
   const receitaNovaVar = aportesSemana?.anterior_novos > 0
     ? Math.abs((aportesSemana.semana_novos - aportesSemana.anterior_novos) / aportesSemana.anterior_novos * 100).toFixed(1) + '% vs ant.'
     : null
@@ -335,7 +334,7 @@ export default function App() {
 
         <div className="tv-kpis">
           <TVKpi label="Custódia total" value={formatCurrency(custodia.total, true)} delta={custodia.variacao_mes != null ? `+${custodia.variacao_mes}% no mês` : null} gold />
-          <TVKpi label="Clientes ativos" value={custodia.total_clientes ?? '—'} sub={`+${novosNaSemana} esta semana`} />
+          <TVKpi label="Clientes ativos" value={totalAtivos ?? '—'} sub={novosEstaSemana ? `+${novosEstaSemana} esta semana` : null} />
           <TVKpi label="Ticket médio" value={formatCurrency(ticket, true)} sub="por cliente" />
           <TVKpi label="Receita nova" value={formatCurrency(aportesSemana?.semana_novos, true)} delta={receitaNovaVar} sub={receitaNovaVar ? null : 'na semana'} />
         </div>
@@ -367,7 +366,7 @@ export default function App() {
         <SectionLabel>Visão Geral</SectionLabel>
         <div className="metric-grid">
           <MetricCard label="Custódia total" value={formatCurrency(custodia.total, true)} delta={custodia.variacao_mes != null ? `+${custodia.variacao_mes}% no mês` : null} gold />
-          <MetricCard label="Clientes ativos" value={custodia.total_clientes ?? '—'} sub={novosClientes.length ? `+${novosClientes.length} este mês` : null} />
+          <MetricCard label="Clientes ativos" value={totalAtivos ?? '—'} sub={novosEstaSemana ? `+${novosEstaSemana} esta semana` : null} />
           <MetricCard label="Ticket médio" value={formatCurrency(ticket, true)} sub="por cliente" />
           <MetricCard label="No pipe" value={pipeTotal} sub="leads ativos" />
         </div>

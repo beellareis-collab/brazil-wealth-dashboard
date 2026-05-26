@@ -7,6 +7,8 @@ const USE_MOCK = !process.env.REACT_APP_SUPABASE_URL && !process.env.REACT_APP_S
 
 const EMPTY = {
   custodia:              { total: null, total_clientes: null },
+  totalAtivos:           null,
+  novosEstaSemana:       null,
   novosClientes:         [],
   pipeline:              [],
   onboardingConsolidado: null,
@@ -44,6 +46,7 @@ export function useDashboard() {
 
       const now = new Date()
       const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0]
+      const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
 
       const [
         { data: custodia },
@@ -54,6 +57,7 @@ export function useDashboard() {
         { data: feesRaw },
         { data: aportesSemana },
         { data: aportesSemanaDetalhe },
+        { data: novosClientesSemana },
       ] = await Promise.all([
         safe(supabase.from('v_custodia_total').select('*').single(), 'custodia'),
         safe(supabase.schema('crm')
@@ -74,6 +78,7 @@ export function useDashboard() {
         safe(supabase.schema('financeiro').from('monthly_fee_history').select('status, billed_amount, month_reference'), 'cobrancas'),
         safe(supabase.from('v_aportes_semana').select('*').single(), 'aportes_semana'),
         safe(supabase.from('v_aportes_semana_detalhe').select('*').order('data_aporte', { ascending: false }), 'aportes_detalhe'),
+        safe(supabase.schema('crm').from('clients').select('id').eq('is_active', true).gte('contract_signed_at', sevenDaysAgo), 'novos_semana'),
       ])
 
       // Pipeline a partir de bw_deals (RD Station)
@@ -170,6 +175,8 @@ const kyc = kycClientsRaw?.length ? {
 
       setData({
         custodia:              custodia || EMPTY.custodia,
+        totalAtivos:           kycClientsRaw?.length ?? null,
+        novosEstaSemana:       novosClientesSemana?.length ?? null,
         novosClientes:         novosFormatted.length ? novosFormatted : EMPTY.novosClientes,
         pipeline:              pipeline?.length ? pipeline : EMPTY.pipeline,
         onboardingConsolidado: onboardingConsolidado || mockData.onboardingConsolidado,
