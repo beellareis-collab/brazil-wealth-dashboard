@@ -127,6 +127,7 @@ export function useDashboard() {
       // Cobranças a partir de financeiro.monthly_fee_history
       const yearStr = now.getFullYear().toString()
       const monthStr = String(now.getMonth() + 1).padStart(2, '0')
+      console.log(`[dash:cobrancas] ${feesRaw?.length ?? 'null'} registros brutos`, feesRaw?.slice(0, 3))
       const isCurrentMonth = (ref) => {
         if (!ref) return false
         const d = new Date(ref)
