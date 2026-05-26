@@ -65,7 +65,7 @@ export function useDashboard() {
         safe(supabaseRD.from('bw_deals').select('stage, value, won, lost'), 'bw_deals'),
         safe(supabase.schema('crm')
           .from('client_onboarding_items')
-          .select('client_id, template_key, completed_at')
+          .select('client_id, template_key, completed_at, clients(name)')
           .in('template_key', Object.keys(ONBOARDING_TEMPLATE_KEY_MAP)), 'onboarding'),
         safe(supabase.schema('crm')
           .from('clients')
@@ -156,7 +156,7 @@ const kyc = kycClientsRaw?.length ? {
         const stepKey = ONBOARDING_TEMPLATE_KEY_MAP[item.template_key]
         if (!stepKey) return acc
         if (!acc[item.client_id]) {
-          acc[item.client_id] = { cliente_id: item.client_id, cliente_nome: '—', ...emptySteps }
+          acc[item.client_id] = { cliente_id: item.client_id, cliente_nome: item.clients?.name || '—', ...emptySteps }
         }
         acc[item.client_id][stepKey] = item.completed_at != null
         return acc
