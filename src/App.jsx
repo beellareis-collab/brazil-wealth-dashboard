@@ -334,7 +334,7 @@ export default function App() {
         </div>
 
         <div className="tv-kpis">
-          <TVKpi label="Custódia total" value={formatCurrency(custodia.total, true)} delta="+8,2% na semana" gold />
+          <TVKpi label="Custódia total" value={formatCurrency(custodia.total, true)} delta={custodia.variacao_mes != null ? `+${custodia.variacao_mes}% no mês` : null} gold />
           <TVKpi label="Clientes ativos" value={custodia.total_clientes ?? '—'} sub={`+${novosNaSemana} esta semana`} />
           <TVKpi label="Ticket médio" value={formatCurrency(ticket, true)} sub="por cliente" />
           <TVKpi label="Receita nova" value={formatCurrency(aportesSemana?.semana_novos, true)} delta={receitaNovaVar} sub={receitaNovaVar ? null : 'na semana'} />
@@ -366,8 +366,8 @@ export default function App() {
 
         <SectionLabel>Visão Geral</SectionLabel>
         <div className="metric-grid">
-          <MetricCard label="Custódia total" value={formatCurrency(custodia.total, true)} delta="+8,2% no mês" gold />
-          <MetricCard label="Clientes ativos" value={custodia.total_clientes ?? '—'} sub="+6 este mês" />
+          <MetricCard label="Custódia total" value={formatCurrency(custodia.total, true)} delta={custodia.variacao_mes != null ? `+${custodia.variacao_mes}% no mês` : null} gold />
+          <MetricCard label="Clientes ativos" value={custodia.total_clientes ?? '—'} sub={novosClientes.length ? `+${novosClientes.length} este mês` : null} />
           <MetricCard label="Ticket médio" value={formatCurrency(ticket, true)} sub="por cliente" />
           <MetricCard label="No pipe" value={pipeTotal} sub="leads ativos" />
         </div>
