@@ -173,6 +173,7 @@ const kyc = kycClientsRaw?.length ? {
         ...Object.fromEntries(stepKeys.map(k => [k, onbClientesFormatted.filter(c => c[k]).length])),
       } : null
 
+      console.log(`[dash:ativos] kycRaw=${kycClientsRaw?.length ?? 'null'} semana=${novosClientesSemana?.length ?? 'null'}`)
       setData({
         custodia:              custodia || EMPTY.custodia,
         totalAtivos:           kycClientsRaw?.length ?? null,
