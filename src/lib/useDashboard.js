@@ -125,17 +125,12 @@ export function useDashboard() {
       } : EMPTY.kyc
 
       // Cobranças a partir de financeiro.monthly_fee_history
-      const yearStr = now.getFullYear().toString()
-      const monthStr = String(now.getMonth() + 1).padStart(2, '0')
-      console.log(`[dash:cobrancas] ${feesRaw?.length ?? 'null'} registros brutos`, feesRaw?.slice(0, 3))
-      const isCurrentMonth = (ref) => {
-        if (!ref) return false
-        const d = new Date(ref)
-        if (!isNaN(d)) return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth()
-        return String(ref).startsWith(`${yearStr}-${monthStr}`) || String(ref).includes(`${monthStr}/${yearStr}`)
-      }
+      const currentMonthStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
+      const availableMonths = [...new Set((feesRaw || []).map(f => f.month_reference).filter(Boolean))].sort().reverse()
+      const targetMonth = availableMonths.includes(currentMonthStr) ? currentMonthStr : (availableMonths[0] || currentMonthStr)
+      console.log(`[dash:cobrancas] ${feesRaw?.length ?? 'null'} registros, exibindo mês: ${targetMonth}`)
       const cobrancas = (feesRaw || [])
-        .filter(f => isCurrentMonth(f.month_reference))
+        .filter(f => f.month_reference === targetMonth)
         .reduce((acc, f) => {
           const v = Number(f.billed_amount) || 0
           if (f.status === 'fechado')  { acc.recebido += v; acc.qtd_fechado++ }
