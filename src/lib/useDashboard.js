@@ -107,6 +107,9 @@ export function useDashboard() {
       // KYC a partir dos campos de suitability em crm.clients
       const in30 = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000)
       const startMonth = new Date(now.getFullYear(), now.getMonth(), 1)
+      const withExpiry = (kycClientsRaw || []).filter(c => c.suitability_expires_at)
+      const withCompleted = (kycClientsRaw || []).filter(c => c.suitability_last_completed_at)
+      console.log(`[dash:kyc] total=${kycClientsRaw?.length} com_expiry=${withExpiry.length} com_completed=${withCompleted.length}`, withExpiry.slice(0, 2))
       const kyc = kycClientsRaw?.length ? {
         suitability_vencido: kycClientsRaw.filter(c =>
           c.suitability_expires_at && new Date(c.suitability_expires_at) < now
