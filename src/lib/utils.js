@@ -25,27 +25,27 @@ export function initials(name) {
   return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
 }
 
-export const ETAPA_LABELS = {
-  novos_contatos: 'Novos contatos',
-  primeiro_contato: '1 contato',
-  carteira_enviada: 'Carteira enviada',
-  consolidacao: 'Consolidação',
-  r1: 'R1',
-  negociacao: 'Negociação',
-  documentacao: 'Documentação',
-  contrato_assinado: 'Contrato assinado',
-}
+// Cada etapa tem múltiplos nomes possíveis vindos do RD Station
+// (underscored, com espaço, com/sem acento). Todas as variações apontam
+// para o mesmo label/cor, garantindo exibição correta independente do formato.
+const _ETAPAS = [
+  { keys: ['novos_contatos',    'novos contatos'],                        label: 'Novos contatos',   color: '#444440' },
+  { keys: ['primeiro_contato',  '1 contato', 'primeiro contato'],         label: '1 contato',        color: '#666660' },
+  { keys: ['carteira_enviada',  'carteira enviada'],                      label: 'Carteira enviada', color: '#C9A84C' },
+  { keys: ['consolidacao',      'consolidação'],                          label: 'Consolidação',     color: '#D4B86A' },
+  { keys: ['r1'],                                                          label: 'R1',               color: '#E8C97A' },
+  { keys: ['negociacao',        'negociação'],                            label: 'Negociação',       color: '#E8C97A' },
+  { keys: ['documentacao',      'documentação'],                          label: 'Documentação',     color: '#C96B4A' },
+  { keys: ['contrato_assinado', 'contrato assinado'],                     label: 'Contrato assinado',color: '#4A9C6A' },
+]
 
-export const ETAPA_COLORS = {
-  novos_contatos: '#444440',
-  primeiro_contato: '#666660',
-  carteira_enviada: '#C9A84C',
-  consolidacao: '#D4B86A',
-  r1: '#E8C97A',
-  negociacao: '#E8C97A',
-  documentacao: '#C96B4A',
-  contrato_assinado: '#4A9C6A',
-}
+export const ETAPA_LABELS = Object.fromEntries(
+  _ETAPAS.flatMap(e => e.keys.map(k => [k, e.label]))
+)
+
+export const ETAPA_COLORS = Object.fromEntries(
+  _ETAPAS.flatMap(e => e.keys.map(k => [k, e.color]))
+)
 
 export const ONBOARDING_STEPS = [
   { key: 'email_boas_vindas',          label: 'E-mail de boas-vindas' },

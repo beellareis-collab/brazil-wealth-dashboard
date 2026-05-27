@@ -108,8 +108,8 @@ function Pipeline({ etapas }) {
         </div>
       </div>
       {etapas.map((e) => {
-        const label = ETAPA_LABELS[e.etapa] || e.etapa
-        const color = ETAPA_COLORS[e.etapa] || '#888'
+        const label = ETAPA_LABELS[e.etapa] || ETAPA_LABELS[e.etapa?.toLowerCase()] || e.etapa
+        const color = ETAPA_COLORS[e.etapa] || ETAPA_COLORS[e.etapa?.toLowerCase()] || '#888'
         const pct = (e.quantidade / maxQtd) * 100
         return (
           <div key={e.etapa} className="pipe-stage">
@@ -262,8 +262,8 @@ function TVPipeline({ etapas }) {
       <div className="tv-card-sub">{formatCurrency(totalVol, true)} estimado</div>
       <div className="tv-list">
         {etapas.map(e => {
-          const color = ETAPA_COLORS[e.etapa] || '#888'
-          const label = ETAPA_LABELS[e.etapa] || e.etapa
+          const color = ETAPA_COLORS[e.etapa] || ETAPA_COLORS[e.etapa?.toLowerCase()] || '#888'
+          const label = ETAPA_LABELS[e.etapa] || ETAPA_LABELS[e.etapa?.toLowerCase()] || e.etapa
           const pct = (e.quantidade / maxQtd) * 100
           return (
             <div key={e.etapa} className="tv-list-row">

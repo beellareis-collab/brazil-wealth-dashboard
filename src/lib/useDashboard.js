@@ -90,20 +90,22 @@ export function useDashboard() {
       weekStart.setDate(now.getDate() - daysFromMon)
       weekStart.setHours(0, 0, 0, 0)
 
-      const STAGE_ORDER = [
-        'novos_contatos', 'novos contatos',
-        'primeiro_contato', '1 contato',
-        'carteira_enviada', 'carteira enviada',
-        'consolidacao', 'consolidação',
-        'r1',
-        'negociacao', 'negociação',
-        'documentacao', 'documentação',
-        'contrato_assinado', 'contrato assinado',
-      ]
-      const stageIdx = (etapa) => {
-        const i = STAGE_ORDER.findIndex(s => s.toLowerCase() === etapa.toLowerCase())
-        return i === -1 ? 999 : i
-      }
+      // Mapa canônico: qualquer variação de nome → rank 0-7
+      // (underscored, com espaço, com/sem acento, maiúsculas)
+      const STAGE_RANK = {}
+      ;[
+        ['novos_contatos',    'novos contatos'],
+        ['primeiro_contato',  '1 contato', 'primeiro contato'],
+        ['carteira_enviada',  'carteira enviada'],
+        ['consolidacao',      'consolidação'],
+        ['r1'],
+        ['negociacao',        'negociação'],
+        ['documentacao',      'documentação'],
+        ['contrato_assinado', 'contrato assinado'],
+      ].forEach((aliases, rank) =>
+        aliases.forEach(a => { STAGE_RANK[a.toLowerCase()] = rank })
+      )
+      const stageIdx = (etapa) => STAGE_RANK[etapa.trim().toLowerCase()] ?? 999
       const pipelineMap = (dealsRaw || [])
         .filter(d => d.won !== true && d.lost !== true)
         .reduce((acc, deal) => {
