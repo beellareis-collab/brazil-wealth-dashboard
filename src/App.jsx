@@ -28,12 +28,13 @@ function MiniSpark({ data = [0,0,0,0,0,0,0], color = 'var(--bw-gold)' }) {
   const dow = now.getDay()
   const todayIdx = dow === 0 ? 6 : dow - 1 // 0=Seg…6=Dom
   const maxVal = Math.max(...data, 1)
+  const tooltip = data.slice(0, todayIdx + 1).map((v, i) => `${SPARK_LABELS[i]}: ${v}`).join(' | ')
   return (
-    <div className="mini-spark" title={data.slice(0, todayIdx + 1).map((v, i) => `${SPARK_LABELS[i]}: ${v}`).join(' | ')}>
+    <div className="mini-spark" title={tooltip}>
       {data.map((val, i) => {
         const isFuture = i > todayIdx
         const isToday  = i === todayIdx
-        const barPct   = isFuture ? 0 : Math.max((val / maxVal) * 100, val > 0 ? 20 : 0)
+        const barPct   = isFuture ? 0 : val > 0 ? Math.max((val / maxVal) * 100, 18) : 0
         return (
           <div key={i} className={`spark-col${isFuture ? ' spark-future' : ''}`}>
             <div className="spark-bar-wrap">
@@ -42,7 +43,8 @@ function MiniSpark({ data = [0,0,0,0,0,0,0], color = 'var(--bw-gold)' }) {
                 style={{
                   height: `${barPct}%`,
                   background: isToday ? 'var(--bw-gold)' : isFuture ? 'transparent' : color,
-                  minHeight: !isFuture && val > 0 ? 3 : 0,
+                  minHeight: !isFuture ? 2 : 0,
+                  opacity: !isFuture && val === 0 ? 0.2 : 1,
                 }}
               />
             </div>
