@@ -79,6 +79,7 @@ function Pipeline({ etapas }) {
                 <div className="stage-bar" style={{ width: `${pct}%`, background: color }} />
               </div>
               <div className="stage-count">{e.quantidade}</div>
+              <div className={`stage-new${!e.novos ? ' stage-new-zero' : ''}`}>+{e.novos || 0} nov.</div>
               <div className="stage-vol">{e.volume_estimado ? formatCurrency(e.volume_estimado, true) + ' est.' : '—'}</div>
             </div>
           </div>
@@ -229,6 +230,9 @@ function TVPipeline({ etapas }) {
                 <div className="tv-list-bar" style={{ width: `${pct}%`, background: color }} />
               </div>
               <div className="tv-list-count">{e.quantidade}</div>
+              {e.novos > 0 && (
+                <div className="tv-list-new">+{e.novos}</div>
+              )}
             </div>
           )
         })}

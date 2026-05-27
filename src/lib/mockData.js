@@ -14,14 +14,14 @@ export const mockData = {
   ],
 
   pipeline: [
-    { etapa: 'novos_contatos', quantidade: 11, volume_estimado: null },
-    { etapa: 'primeiro_contato', quantidade: 9, volume_estimado: null },
-    { etapa: 'carteira_enviada', quantidade: 7, volume_estimado: 9100000 },
-    { etapa: 'consolidacao', quantidade: 5, volume_estimado: 6400000 },
-    { etapa: 'r1', quantidade: 4, volume_estimado: 5200000 },
-    { etapa: 'negociacao', quantidade: 3, volume_estimado: 3800000 },
-    { etapa: 'documentacao', quantidade: 2, volume_estimado: 2100000 },
-    { etapa: 'contrato_assinado', quantidade: 1, volume_estimado: 1400000 },
+    { etapa: 'novos_contatos', quantidade: 11, volume_estimado: null, novos: 4 },
+    { etapa: 'primeiro_contato', quantidade: 9, volume_estimado: null, novos: 2 },
+    { etapa: 'carteira_enviada', quantidade: 7, volume_estimado: 9100000, novos: 1 },
+    { etapa: 'consolidacao', quantidade: 5, volume_estimado: 6400000, novos: 1 },
+    { etapa: 'r1', quantidade: 4, volume_estimado: 5200000, novos: 0 },
+    { etapa: 'negociacao', quantidade: 3, volume_estimado: 3800000, novos: 0 },
+    { etapa: 'documentacao', quantidade: 2, volume_estimado: 2100000, novos: 0 },
+    { etapa: 'contrato_assinado', quantidade: 1, volume_estimado: 1400000, novos: 1 },
   ],
 
   onboardingConsolidado: {

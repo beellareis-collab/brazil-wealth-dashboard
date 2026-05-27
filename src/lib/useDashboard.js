@@ -66,7 +66,7 @@ export function useDashboard() {
           .eq('is_active', true)
           .gte('contract_signed_at', startOfMonth)
           .order('contract_signed_at', { ascending: false }), 'clientes'),
-        safe(supabaseRD.from('bw_deals').select('stage, value, won, lost'), 'bw_deals'),
+        safe(supabaseRD.from('bw_deals').select('stage, value, won, lost, created_at'), 'bw_deals'),
         safe(supabase.schema('crm')
           .from('client_onboarding_items')
           .select('client_id, template_key, completed_at, clients(name)')
@@ -100,9 +100,12 @@ export function useDashboard() {
         .filter(d => d.won !== true && d.lost !== true)
         .reduce((acc, deal) => {
           const key = deal.stage || 'Sem etapa'
-          if (!acc[key]) acc[key] = { etapa: key, quantidade: 0, volume_estimado: 0 }
+          if (!acc[key]) acc[key] = { etapa: key, quantidade: 0, volume_estimado: 0, novos: 0 }
           acc[key].quantidade++
           acc[key].volume_estimado += Number(deal.value) || 0
+          if (deal.created_at && new Date(deal.created_at) >= new Date(sevenDaysAgo)) {
+            acc[key].novos++
+          }
           return acc
         }, {})
       const pipeline = Object.keys(pipelineMap).length > 0

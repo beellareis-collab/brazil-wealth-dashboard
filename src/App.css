@@ -117,6 +117,12 @@ body {
 .stage-bar-wrap { width: 90px; height: 5px; background: var(--bw-border); border-radius: 3px; overflow: hidden; }
 .stage-bar { height: 100%; border-radius: 2px; }
 .stage-count { font-size: 13px; font-weight: 500; color: var(--bw-text); min-width: 18px; text-align: right; }
+.stage-new {
+  font-size: 10px; font-weight: 500; color: var(--bw-ok);
+  background: var(--bw-ok-bg); border: 0.5px solid rgba(74, 156, 106, 0.3);
+  padding: 2px 6px; border-radius: 4px; white-space: nowrap; min-width: 42px; text-align: center;
+}
+.stage-new-zero { visibility: hidden; }
 .stage-vol { font-size: 11px; color: var(--bw-muted); min-width: 78px; text-align: right; }
 .pipe-total {
   margin-top: 12px; padding-top: 12px; border-top: 0.5px solid var(--bw-border);
@@ -328,6 +334,11 @@ body {
 .tv-list-bar-wrap { width: 80px; height: 5px; background: var(--bw-border); border-radius: 3px; overflow: hidden; flex-shrink: 0; }
 .tv-list-bar { height: 100%; border-radius: 3px; }
 .tv-list-count { font-size: 13px; font-weight: 600; color: var(--bw-text); min-width: 32px; text-align: right; }
+.tv-list-new {
+  font-size: 10px; font-weight: 500; color: var(--bw-ok);
+  background: var(--bw-ok-bg); border: 0.5px solid rgba(74, 156, 106, 0.3);
+  padding: 2px 5px; border-radius: 4px; white-space: nowrap; flex-shrink: 0;
+}
 
 /* Alerts row */
 .tv-alerts-row {
