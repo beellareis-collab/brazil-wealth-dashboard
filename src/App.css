@@ -117,13 +117,30 @@ body {
 .stage-bar-wrap { width: 90px; height: 5px; background: var(--bw-border); border-radius: 3px; overflow: hidden; }
 .stage-bar { height: 100%; border-radius: 2px; }
 .stage-count { font-size: 13px; font-weight: 500; color: var(--bw-text); min-width: 18px; text-align: right; }
-.stage-new {
-  font-size: 10px; font-weight: 500; color: var(--bw-ok);
-  background: var(--bw-ok-bg); border: 0.5px solid rgba(74, 156, 106, 0.3);
-  padding: 2px 6px; border-radius: 4px; white-space: nowrap; min-width: 42px; text-align: center;
-}
-.stage-new-zero { visibility: hidden; }
 .stage-vol { font-size: 11px; color: var(--bw-muted); min-width: 78px; text-align: right; }
+
+/* Mini Sparkline — evolução diária da semana no pipeline */
+.mini-spark {
+  display: flex; gap: 3px; align-items: flex-end;
+  height: 32px; flex-shrink: 0; padding-bottom: 0; margin: 0 6px;
+}
+.spark-col {
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  width: 10px;
+}
+.spark-col.spark-future { opacity: 0.18; }
+.spark-bar-wrap {
+  flex: 1; width: 100%; display: flex; align-items: flex-end;
+}
+.spark-bar {
+  width: 100%; border-radius: 2px 2px 0 0;
+  transition: height 0.3s ease;
+}
+.spark-lbl {
+  font-size: 7px; color: var(--bw-subtle); line-height: 1;
+  text-align: center; user-select: none;
+}
+.spark-today-lbl { color: var(--bw-gold); }
 .pipe-total {
   margin-top: 12px; padding-top: 12px; border-top: 0.5px solid var(--bw-border);
   display: flex; justify-content: space-between; align-items: center;

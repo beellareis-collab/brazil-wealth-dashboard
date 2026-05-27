@@ -19,6 +19,41 @@ function ViewTabs({ view, setView }) {
   )
 }
 
+// ── Shared helpers ───────────────────────────────────────────
+
+const SPARK_LABELS = ['S', 'T', 'Q', 'Q', 'S', 'S', 'D'] // Seg…Dom
+
+function MiniSpark({ data = [0,0,0,0,0,0,0], color = 'var(--bw-gold)' }) {
+  const now = new Date()
+  const dow = now.getDay()
+  const todayIdx = dow === 0 ? 6 : dow - 1 // 0=Seg…6=Dom
+  const maxVal = Math.max(...data, 1)
+  return (
+    <div className="mini-spark" title={data.slice(0, todayIdx + 1).map((v, i) => `${SPARK_LABELS[i]}: ${v}`).join(' | ')}>
+      {data.map((val, i) => {
+        const isFuture = i > todayIdx
+        const isToday  = i === todayIdx
+        const barPct   = isFuture ? 0 : Math.max((val / maxVal) * 100, val > 0 ? 20 : 0)
+        return (
+          <div key={i} className={`spark-col${isFuture ? ' spark-future' : ''}`}>
+            <div className="spark-bar-wrap">
+              <div
+                className="spark-bar"
+                style={{
+                  height: `${barPct}%`,
+                  background: isToday ? 'var(--bw-gold)' : isFuture ? 'transparent' : color,
+                  minHeight: !isFuture && val > 0 ? 3 : 0,
+                }}
+              />
+            </div>
+            <div className={`spark-lbl${isToday ? ' spark-today-lbl' : ''}`}>{SPARK_LABELS[i]}</div>
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
 // ── Detail components ────────────────────────────────────────
 
 function MetricCard({ label, value, sub, delta, gold }) {
@@ -56,13 +91,19 @@ function NovosClientes({ clientes }) {
 function Pipeline({ etapas }) {
   const maxQtd = Math.max(...etapas.map(e => e.quantidade), 1)
   const totalVolume = etapas.reduce((s, e) => s + (e.volume_estimado || 0), 0)
+  const totalNovos = etapas.reduce((s, e) => s + (e.novos || 0), 0)
   return (
     <div className="card">
       <div className="card-title">
         Pipeline de leads
-        <span style={{ fontWeight: 400, fontSize: 11, color: 'var(--bw-muted)' }}>
-          {etapas.reduce((s, e) => s + e.quantidade, 0)} ativos
-        </span>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          {totalNovos > 0 && (
+            <span style={{ fontWeight: 500, fontSize: 11, color: 'var(--bw-ok)' }}>+{totalNovos} esta semana</span>
+          )}
+          <span style={{ fontWeight: 400, fontSize: 11, color: 'var(--bw-muted)' }}>
+            {etapas.reduce((s, e) => s + e.quantidade, 0)} ativos
+          </span>
+        </div>
       </div>
       {etapas.map((e) => {
         const label = ETAPA_LABELS[e.etapa] || e.etapa
@@ -74,12 +115,12 @@ function Pipeline({ etapas }) {
               <div className="stage-dot" style={{ background: color }} />
               <div className="stage-name">{label}</div>
             </div>
+            <MiniSpark data={e.novos_semana} color={color} />
             <div className="stage-right">
               <div className="stage-bar-wrap">
                 <div className="stage-bar" style={{ width: `${pct}%`, background: color }} />
               </div>
               <div className="stage-count">{e.quantidade}</div>
-              <div className={`stage-new${!e.novos ? ' stage-new-zero' : ''}`}>+{e.novos || 0} nov.</div>
               <div className="stage-vol">{e.volume_estimado ? formatCurrency(e.volume_estimado, true) + ' est.' : '—'}</div>
             </div>
           </div>

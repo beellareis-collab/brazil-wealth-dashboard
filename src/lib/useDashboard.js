@@ -82,6 +82,14 @@ export function useDashboard() {
       ])
 
       // Pipeline a partir de bw_deals (RD Station)
+
+      // Início da semana corrente (segunda-feira 00:00)
+      const weekStart = new Date(now)
+      const dow = now.getDay() // 0=Dom...6=Sáb
+      const daysFromMon = dow === 0 ? 6 : dow - 1
+      weekStart.setDate(now.getDate() - daysFromMon)
+      weekStart.setHours(0, 0, 0, 0)
+
       const STAGE_ORDER = [
         'novos_contatos', 'novos contatos',
         'primeiro_contato', '1 contato',
@@ -100,11 +108,17 @@ export function useDashboard() {
         .filter(d => d.won !== true && d.lost !== true)
         .reduce((acc, deal) => {
           const key = deal.stage || 'Sem etapa'
-          if (!acc[key]) acc[key] = { etapa: key, quantidade: 0, volume_estimado: 0, novos: 0 }
+          if (!acc[key]) acc[key] = { etapa: key, quantidade: 0, volume_estimado: 0, novos: 0, novos_semana: [0,0,0,0,0,0,0] }
           acc[key].quantidade++
           acc[key].volume_estimado += Number(deal.value) || 0
-          if (deal.created_at && new Date(deal.created_at) >= new Date(sevenDaysAgo)) {
-            acc[key].novos++
+          if (deal.created_at) {
+            const d = new Date(deal.created_at)
+            if (d >= weekStart) {
+              // índice 0=Seg … 6=Dom
+              const dayIdx = d.getDay() === 0 ? 6 : d.getDay() - 1
+              acc[key].novos_semana[dayIdx]++
+              acc[key].novos++
+            }
           }
           return acc
         }, {})
