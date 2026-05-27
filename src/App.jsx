@@ -346,8 +346,14 @@ function TVAlerts({ kyc, cobrancas }) {
 // ── Main App ────────────────────────────────────────────────
 
 export default function App() {
-  const { data, loading } = useDashboard()
+  const { data, loading, refetch } = useDashboard()
   const [view, setView] = useState('tv')
+  const [refreshing, setRefreshing] = useState(false)
+
+  async function handleRefresh() {
+    setRefreshing(true)
+    try { await refetch() } finally { setRefreshing(false) }
+  }
 
   if (loading) {
     return (
@@ -374,7 +380,13 @@ export default function App() {
             <div className="logo-sub">Consultoria de Investimentos</div>
           </div>
           <ViewTabs view={view} setView={setView} />
-          <div className="period">{period}</div>
+          <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+            <button className={`btn-refresh${refreshing ? ' refreshing' : ''}`} onClick={handleRefresh} disabled={refreshing}>
+              <span className="refresh-icon">↻</span>
+              {refreshing ? 'Atualizando…' : 'Atualizar'}
+            </button>
+            <div className="period">{period}</div>
+          </div>
         </div>
 
         <div className="tv-kpis">
@@ -404,6 +416,10 @@ export default function App() {
           </div>
           <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
             <ViewTabs view={view} setView={setView} />
+            <button className={`btn-refresh${refreshing ? ' refreshing' : ''}`} onClick={handleRefresh} disabled={refreshing}>
+              <span className="refresh-icon">↻</span>
+              {refreshing ? 'Atualizando…' : 'Atualizar'}
+            </button>
             <div className="period">{period}</div>
           </div>
         </div>
